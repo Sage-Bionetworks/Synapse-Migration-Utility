@@ -5,19 +5,19 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sagebionetworks.client.SynapseAdminClient;
 import org.sagebionetworks.client.exceptions.SynapseException;
+import org.sagebionetworks.migration.async.AsyncMigrationWorker;
+import org.sagebionetworks.migration.async.ConcurrentExecutionResult;
+import org.sagebionetworks.migration.async.ConcurrentMigrationTypeChecksumsExecutor;
+import org.sagebionetworks.migration.async.ConcurrentMigrationTypeCountsExecutor;
 import org.sagebionetworks.migration.delta.*;
 import org.sagebionetworks.repo.model.migration.*;
 import org.sagebionetworks.repo.model.status.StackStatus;
@@ -41,7 +41,6 @@ public class MigrationClient {
 
 	SynapseClientFactory factory;
 	ExecutorService threadPool;
-	List<Exception> deferredExceptions;
 
 	/**
 	 * New migration client.
@@ -51,7 +50,6 @@ public class MigrationClient {
 		if(factory == null) throw new IllegalArgumentException("Factory cannot be null");
 		this.factory = factory;
 		threadPool = Executors.newFixedThreadPool(1);
-		deferredExceptions = new ArrayList<Exception>();
 	}
 
 	public List<MigrationType> getCommonMigrationTypes() throws SynapseException {
@@ -61,13 +59,7 @@ public class MigrationClient {
 		MigrationTypeNames srcMigrationTypeNames = srcClient.getMigrationTypeNames();
 		MigrationTypeNames destMigrationTypeNames = destClient.getMigrationTypeNames();
 
-		List<String> commonTypeNames = getCommonTypeNames(srcMigrationTypeNames, destMigrationTypeNames);
-
-		List<MigrationType> commonTypes = new LinkedList<MigrationType>();
-		for (String t: commonTypeNames) {
-			commonTypes.add(MigrationType.valueOf(t));
-		}
-		return commonTypes;
+		return getCommonMigrationTypes(srcMigrationTypeNames, destMigrationTypeNames);
 	}
 
 	public List<MigrationType> getCommonPrimaryMigrationTypes() throws SynapseException {
@@ -77,6 +69,10 @@ public class MigrationClient {
 		MigrationTypeNames srcMigrationTypeNames = srcClient.getPrimaryTypeNames();
 		MigrationTypeNames destMigrationTypeNames = destClient.getPrimaryTypeNames();
 
+		return getCommonMigrationTypes(srcMigrationTypeNames, destMigrationTypeNames);
+	}
+
+	private List<MigrationType> getCommonMigrationTypes(MigrationTypeNames srcMigrationTypeNames, MigrationTypeNames destMigrationTypeNames) {
 		List<String> commonTypeNames = getCommonTypeNames(srcMigrationTypeNames, destMigrationTypeNames);
 
 		List<MigrationType> commonTypes = new LinkedList<MigrationType>();
@@ -145,45 +141,15 @@ public class MigrationClient {
 	 * 
 	 * @throws Exception 
 	 */
-	public boolean migrate(int maxRetries, long maxBackupBatchSize, long minRangeSize, long timeoutMS) throws SynapseException, JSONObjectAdapterException {
+	public boolean migrateWithRetry(int maxRetries, long maxBackupBatchSize, long minRangeSize, long timeoutMS) throws SynapseException, JSONObjectAdapterException {
 		boolean failed = false;
 		try {
 			// First set the destination stack status to down
 			setDestinationStatus(StatusEnum.READ_ONLY, "Staging is down for data migration");
 			for (int i = 0; i < maxRetries; i++) {
 				try {
-					// Determine which types to migrate
-					logger.info("Determining types to migrate...");
-					List<MigrationType> typesToMigrate = this.getCommonMigrationTypes();
-					List<MigrationType> primaryTypesToMigrate = this.getCommonPrimaryMigrationTypes();
-					// Get the counts
-					// TODO: Replace by async when supported by backend
-					List<MigrationTypeCount> startSourceCounts = getTypeCounts(factory.getSourceClient(), typesToMigrate);
-					List<MigrationTypeCount> startDestCounts = getTypeCounts(factory.getDestinationClient(), typesToMigrate);
-					// Build the metadata for each type
-					List<TypeToMigrateMetadata> typesToMigrateMetadata = ToolMigrationUtils.buildTypeToMigrateMetadata(startSourceCounts, startDestCounts, primaryTypesToMigrate);
+					failed = migrate(minRangeSize, maxBackupBatchSize, timeoutMS);
 
-					// Display starting counts
-					logger.info("Starting diffs in counts:");
-					printDiffsInCounts(startSourceCounts, startDestCounts);
-
-					// Actual migration
-					this.migrateTypes(typesToMigrateMetadata, maxBackupBatchSize, minRangeSize, timeoutMS);
-
-					// Print the final counts
-					List<MigrationTypeCount> endSourceCounts = getTypeCounts(factory.getSourceClient(), typesToMigrate);
-					List<MigrationTypeCount> endDestCounts = getTypeCounts(factory.getDestinationClient(), typesToMigrate);
-					logger.info("Ending diffs in  counts:");
-					printDiffsInCounts(endSourceCounts, endDestCounts);
-
-					// If final sync (source is in read-only mode) then do a table checksum
-					// Note: Destination is always in read-only during migration
-					if (factory.getSourceClient().getCurrentStackStatus().getStatus() == StatusEnum.READ_ONLY) {
-						doChecksumForMigratedTypes(factory.getSourceClient(), factory.getDestinationClient(), primaryTypesToMigrate);
-					}
-
-					// Exit on 1st success
-					failed = false;
 				} catch (Exception e) {
 					failed = true;
 					logger.error("Failed at attempt: " + i + " with error " + e.getMessage(), e);
@@ -199,43 +165,72 @@ public class MigrationClient {
 		return failed;
 	}
 
-	private void doChecksumForMigratedTypes(SynapseAdminClient source,
-			SynapseAdminClient destination,
-			List<MigrationType> typesToMigrate)
-			throws SynapseException, JSONObjectAdapterException,
-			RuntimeException, InterruptedException {
-		logger.info("Final migration, checking table checksums");
-		boolean isChecksumDiff = false;
-		for (MigrationType t: typesToMigrate) {
-			String srcTableChecksum = doAsyncChecksumForType(source, t);
-			String destTableChecksum = doAsyncChecksumForType(destination, t);
-			StringBuilder sb = new StringBuilder();
-			sb.append("Migration type: ");
-			sb.append(t);
-			sb.append(": ");
-			if (! srcTableChecksum.equals(destTableChecksum)) {
-				isChecksumDiff = true;
-				sb.append("\n*** Found table checksum difference. ***\n");
-			} else {
-				sb.append("Table checksums identical.");
+	private boolean migrate(long minRangeSize, long maxBackupBatchSize, long timeoutMS) throws Exception {
+		boolean failed;
+		// Determine which types to migrate
+		logger.info("Determining types to migrate...");
+		List<MigrationType> typesToMigrate = this.getCommonMigrationTypes();
+		List<MigrationType> primaryTypesToMigrate = this.getCommonPrimaryMigrationTypes();
+
+		// Get the counts
+		ConcurrentMigrationTypeCountsExecutor typeCountsExecutor = new ConcurrentMigrationTypeCountsExecutor(this.threadPool, this.factory, typesToMigrate, timeoutMS);
+
+		ConcurrentExecutionResult<List<MigrationTypeCount>> migrationTypeCounts = typeCountsExecutor.getMigrationTypeCounts();
+		List<MigrationTypeCount> startSourceCounts = migrationTypeCounts.getSourceResult();
+		List<MigrationTypeCount> startDestinationCounts = migrationTypeCounts.getDestinationResult();
+
+		// Build the metadata for each type
+		List<TypeToMigrateMetadata> typesToMigrateMetadata = ToolMigrationUtils.buildTypeToMigrateMetadata(startSourceCounts, startDestinationCounts, primaryTypesToMigrate);
+
+		// Display starting counts
+		logger.info("Starting diffs in counts:");
+		printDiffsInCounts(startSourceCounts, startDestinationCounts);
+
+		// Actual migration
+		this.migrateTypes(typesToMigrateMetadata, maxBackupBatchSize, minRangeSize, timeoutMS);
+
+		// Print the final counts
+		migrationTypeCounts = typeCountsExecutor.getMigrationTypeCounts();
+		List<MigrationTypeCount> endSourceCounts = migrationTypeCounts.getSourceResult();
+		List<MigrationTypeCount> endDestCounts = migrationTypeCounts.getDestinationResult();
+
+		logger.info("Ending diffs in  counts:");
+		printDiffsInCounts(endSourceCounts, endDestCounts);
+
+		// If final sync (source is in read-only mode) then do a table checksum
+		// Note: Destination is always in read-only during migration
+		if (factory.getSourceClient().getCurrentStackStatus().getStatus() == StatusEnum.READ_ONLY) {
+			boolean foundChecksumDiff = false;
+			for (MigrationType t: typesToMigrate) {
+				if (doConcurrentChecksumForType(timeoutMS, t)) {
+					foundChecksumDiff = true;
+				}
 			}
-			logger.info(sb.toString());
-		}
-		if (isChecksumDiff) {
-			throw new RuntimeException("Table checksum differences in final sync.");
-		}
+			if (foundChecksumDiff) {
+				throw new RuntimeException("Table checksum differences in final sync.");
+			}
+        }
+
+		// Exit on 1st success
+		failed = false;
+		return failed;
 	}
-	
-	public String doAsyncChecksumForType(SynapseAdminClient client, MigrationType t) throws SynapseException, InterruptedException, JSONObjectAdapterException {
-		String checksum = null;
-		AsyncMigrationTypeChecksumRequest req = new AsyncMigrationTypeChecksumRequest();
-		req.setType(t.name());
-		BasicProgress progress = new BasicProgress();
-		AsyncMigrationWorker worker = new AsyncMigrationWorker(client, req, 900000, progress);
-		AdminResponse resp = worker.call();
-		MigrationTypeChecksum res = (MigrationTypeChecksum)resp;
-		checksum = res.getChecksum();
-		return checksum;
+
+	private boolean doConcurrentChecksumForType(long timeoutMS, MigrationType t) {
+		ConcurrentMigrationTypeChecksumsExecutor typeChecksumExecutor = new ConcurrentMigrationTypeChecksumsExecutor(threadPool, factory, t, timeoutMS);
+		ConcurrentExecutionResult<String> typeChecksums = typeChecksumExecutor.getMigrationTypeChecksums();
+		StringBuilder sb = new StringBuilder();
+		sb.append("Migration type: ");
+		sb.append(t);
+		sb.append(": ");
+		boolean foundDiff = (! typeChecksums.getSourceResult().equals(typeChecksums.getDestinationResult()));
+		if (foundDiff) {
+            sb.append("\n*** Found table checksum difference. ***\n");
+        } else {
+            sb.append("Table checksums identical.");
+        }
+		logger.info(sb.toString());
+		return foundDiff;
 	}
 
 	/**
@@ -463,7 +458,7 @@ public class MigrationClient {
 			AsyncMigrationTypeCountRequest req = new AsyncMigrationTypeCountRequest();
 			req.setType(type.name());
 			BasicProgress progress = new BasicProgress();
-			AsyncMigrationWorker worker = new AsyncMigrationWorker(conn, req, 900000, progress);
+			AsyncMigrationWorker worker = new AsyncMigrationWorker(conn, req, 900000);
 			AdminResponse resp = worker.call();
 			res = (MigrationTypeCount)resp;
 		}
