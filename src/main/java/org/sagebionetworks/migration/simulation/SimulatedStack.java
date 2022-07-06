@@ -63,6 +63,7 @@ public class SimulatedStack {
 	private Map<MigrationType, List<Row>> typeToRows;
 	private long jobIdCounter;
 	private Map<String, AsyncMigrationRequest> requestJobs;
+	private boolean updateReadWriteStack = false;
 
 	/**
 	 * Create a new simulated stack with the configured data.
@@ -74,8 +75,29 @@ public class SimulatedStack {
 		statckStatus = new StackStatus().setStatus(StatusEnum.READ_WRITE);
 		jobIdCounter = 0;
 		requestJobs = new LinkedHashMap<String, AsyncMigrationRequest>();
+		updateReadWriteStack = false;
 		buildRowsForEachType(stackData);
 	}
+	
+	
+
+	/**
+	 * @return the updateReadWriteStack
+	 */
+	public boolean isUpdateReadWriteStack() {
+		return updateReadWriteStack;
+	}
+
+
+
+	/**
+	 * @param updateReadWriteStack the updateReadWriteStack to set
+	 */
+	public void setUpdateReadWriteStack(boolean updateReadWriteStack) {
+		this.updateReadWriteStack = updateReadWriteStack;
+	}
+
+
 
 	/**
 	 * Get the actual rows for the given type.
@@ -164,10 +186,31 @@ public class SimulatedStack {
 		try {
 			String methodName = "execute" + request.getClass().getSimpleName();
 			Method method = thisObject.getClass().getMethod(methodName, request.getClass());
-			return (AdminResponse) method.invoke(thisObject, request);
+			AdminResponse response = (AdminResponse) method.invoke(thisObject, request);
+			// change the stack if needed.
+			if(updateReadWriteStack && StatusEnum.READ_WRITE.equals(statckStatus.getStatus())) {
+				deleteUpdateAndAddRowForEachType();
+			}
+			return response;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	/**
+	 * Delete, update and add a row for each type.
+	 * 
+	 */
+	public void deleteUpdateAndAddRowForEachType() {
+		thisObject.typeToRows.forEach((t,r) ->{
+			// delete the middle row
+			r.remove(r.size()/2);
+			// update the new middle row
+			r.get(r.size()/2).setEtag(UUID.randomUUID().toString());
+			// add a new row
+			long maxRowId = r.stream().map(p->p.getRowId()).max(Long::compareTo).get();
+			r.add(new Row().setRowId(maxRowId+1).setEtag(UUID.randomUUID().toString()));
+		});
 	}
 
 	public MigrationTypeCounts executeAsyncMigrationTypeCountsRequest(AsyncMigrationTypeCountsRequest request) {

@@ -15,7 +15,7 @@ import com.google.inject.util.Modules;
 
 public class StackSimulator extends AbstractModule {
 
-	private int maxNumberOfThreads = 2;
+	private int maxNumberOfThreads = 1;
 	private int maximumBackupBatchSize = 10;
 	private long workerTimeoutMs = 1000L;
 	private int maxRetries = 2;
@@ -31,6 +31,16 @@ public class StackSimulator extends AbstractModule {
 		super();
 		this.sourceStack = sourceStack;
 		this.destinationStack = destinationStack;
+	}
+	
+	/**
+	 * Override the maximum batch size.
+	 * @param size
+	 * @return
+	 */
+	public StackSimulator withMaximumBackupBatchSize(int size) {
+		this.maximumBackupBatchSize = size;
+		return this;
 	}
 
 	/**
