@@ -33,12 +33,6 @@ public interface Configuration {
 	 */
 	public int getMaximumBackupBatchSize();
 
-	/**
-	 * The minimum size for a DeltaRange (before deltas are calculated serially vs checksum
-	 *
-	 * @return
-	 */
-	public int getMinimumDeltaRangeSize();
 
 	public long getWorkerTimeoutMs();
 
@@ -47,13 +41,6 @@ public interface Configuration {
 	 */
 	public int getMaxRetries();
 	
-	
-	/**
-	 * A full table migration will occur if the destination has less than this threshold percentage of rows.
-	 * 
-	 * @return percentage (float between zero and one)
-	 */
-	public float getFullTableMigrationThresholdPercentage();
 	
 	/**
 	 * The type of alias that should be used when writing and reading 
