@@ -29,10 +29,8 @@ public class MigrationConfigurationImpl implements Configuration {
 	static final String KEY_DESTINATION_SERVICE_SECRET = "org.sagebionetworks.service.secret.destination";
 	static final String KEY_MAX_THREADS = "org.sagebionetworks.max.threads";
 	static final String KEY_MAX_BACKUP_BATCHSIZE = "org.sagebionetworks.max.backup.batchsize";
-	static final String KEY_MIN_DELTA_RANGESIZE = "org.sagebionetworks.min.delta.rangesize";
 	static final String KEY_THREAD_TIMOUT_MS = "org.sagebionetworks.worker.thread.timout.ms";
 	static final String KEY_MAX_RETRIES = "org.sagebionetworks.max.retries";
-	static final String KEY_THRESHOLD_PERCENTAGE = "org.sagebionetworks.full.table.migration.threshold.percentage";
 	static final String KEY_BACKUP_ALIAS_TYPE = "org.sagebionetworks.backup.alias.type";
 	static final String KEY_DELAY_BEFORE_START_MS = "org.sagebionetworks.delay.before.start.ms";
 	static final String KEY_INCLUDE_FULL_TABLE_CHECKSUM = "org.sagebionetworks.include.full.table.checksum";
@@ -85,11 +83,6 @@ public class MigrationConfigurationImpl implements Configuration {
 	}
 
 	@Override
-	public int getMinimumDeltaRangeSize() {
-		return Integer.parseInt(getProperty(KEY_MIN_DELTA_RANGESIZE));
-	}
-	
-	@Override
 	public long getWorkerTimeoutMs(){
 		return Long.parseLong(getProperty(KEY_THREAD_TIMOUT_MS));
 	}
@@ -97,11 +90,6 @@ public class MigrationConfigurationImpl implements Configuration {
 	@Override
 	public int getMaxRetries() {
 		return Integer.parseInt(getProperty(KEY_MAX_RETRIES));
-	}
-
-	@Override
-	public float getFullTableMigrationThresholdPercentage() {
-		return Float.parseFloat(getProperty(KEY_THRESHOLD_PERCENTAGE));
 	}
 
 	@Override
