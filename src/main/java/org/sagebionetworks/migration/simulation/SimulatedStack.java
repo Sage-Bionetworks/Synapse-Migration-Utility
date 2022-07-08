@@ -105,8 +105,17 @@ public class SimulatedStack {
 	 * @param type
 	 * @return
 	 */
-	List<Row> getRowsOfType(MigrationType type) {
+	public List<Row> getRowsOfType(MigrationType type) {
 		return typeToRows.get(type);
+	}
+	
+	/**
+	 * Override the rows for a given type.
+	 * @param type
+	 * @param rows
+	 */
+	public void setRowsOfType(MigrationType type, List<Row> rows) {
+		typeToRows.put(type, new ArrayList<Row>(rows));
 	}
 
 	/**
@@ -193,6 +202,7 @@ public class SimulatedStack {
 			}
 			return response;
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
 	}
