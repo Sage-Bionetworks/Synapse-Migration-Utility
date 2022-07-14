@@ -56,6 +56,20 @@ import org.sagebionetworks.repo.model.status.StatusEnum;
 import org.sagebionetworks.repo.model.table.Row;
 import org.sagebionetworks.schema.adapter.org.json.EntityFactory;
 
+/**
+ * Allows for the simulation of a single stack. This class provides a
+ * {@link Proxy} implements of {@link SynapseAdminClient} that includes only the
+ * migration relevant functions are implemented (see:
+ * {@link SimulatedStack#createProxy()})
+ * <p>
+ * The stack can be initialized to contain rows for one or more migration types.
+ * These rows represent the state of the stack for all interactions with the
+ * client. In order to simulate the full migration process, both a source and
+ * destination simulated stack will be needed. For a simulate migration run, the
+ * client will attempt to migrate data from a simulated source stack to a
+ * simulated destination stack.
+ * </p>
+ */
 public class SimulatedStack {
 
 	private StackStatus statckStatus;
@@ -78,8 +92,6 @@ public class SimulatedStack {
 		updateReadWriteStack = false;
 		buildRowsForEachType(stackData);
 	}
-	
-	
 
 	/**
 	 * @return the updateReadWriteStack
@@ -88,16 +100,12 @@ public class SimulatedStack {
 		return updateReadWriteStack;
 	}
 
-
-
 	/**
 	 * @param updateReadWriteStack the updateReadWriteStack to set
 	 */
 	public void setUpdateReadWriteStack(boolean updateReadWriteStack) {
 		this.updateReadWriteStack = updateReadWriteStack;
 	}
-
-
 
 	/**
 	 * Get the actual rows for the given type.
@@ -108,9 +116,10 @@ public class SimulatedStack {
 	public List<Row> getRowsOfType(MigrationType type) {
 		return typeToRows.get(type);
 	}
-	
+
 	/**
 	 * Override the rows for a given type.
+	 * 
 	 * @param type
 	 * @param rows
 	 */
@@ -197,7 +206,7 @@ public class SimulatedStack {
 			Method method = thisObject.getClass().getMethod(methodName, request.getClass());
 			AdminResponse response = (AdminResponse) method.invoke(thisObject, request);
 			// change the stack if needed.
-			if(updateReadWriteStack && StatusEnum.READ_WRITE.equals(statckStatus.getStatus())) {
+			if (updateReadWriteStack && StatusEnum.READ_WRITE.equals(statckStatus.getStatus())) {
 				deleteUpdateAndAddRowForEachType();
 			}
 			return response;
@@ -206,20 +215,20 @@ public class SimulatedStack {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	/**
 	 * Delete, update and add a row for each type.
 	 * 
 	 */
 	public void deleteUpdateAndAddRowForEachType() {
-		thisObject.typeToRows.forEach((t,r) ->{
+		thisObject.typeToRows.forEach((t, r) -> {
 			// delete the middle row
-			r.remove(r.size()/2);
+			r.remove(r.size() / 2);
 			// update the new middle row
-			r.get(r.size()/2).setEtag(UUID.randomUUID().toString());
+			r.get(r.size() / 2).setEtag(UUID.randomUUID().toString());
 			// add a new row
-			long maxRowId = r.stream().map(p->p.getRowId()).max(Long::compareTo).get();
-			r.add(new Row().setRowId(maxRowId+1).setEtag(UUID.randomUUID().toString()));
+			long maxRowId = r.stream().map(p -> p.getRowId()).max(Long::compareTo).get();
+			r.add(new Row().setRowId(maxRowId + 1).setEtag(UUID.randomUUID().toString()));
 		});
 	}
 
@@ -371,7 +380,7 @@ public class SimulatedStack {
 			if (row.getRowId() >= request.getMinimumId() && row.getRowId() <= request.getMaximumId()) {
 				Long bin = row.getRowId() / request.getBatchSize();
 				List<Row> list = binToRows.get(bin);
-				if(list == null) {
+				if (list == null) {
 					list = new ArrayList<Row>();
 					binToRows.put(bin, list);
 				}

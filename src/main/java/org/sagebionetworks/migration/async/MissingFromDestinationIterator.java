@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import org.sagebionetworks.migration.config.Configuration;
 import org.sagebionetworks.migration.utils.TypeToMigrateMetadata;
 import org.sagebionetworks.repo.model.migration.MigrationType;
-import org.sagebionetworks.util.ValidateArgument;
 
 import com.google.common.collect.Iterators;
 
@@ -42,7 +41,6 @@ public class MissingFromDestinationIterator implements Iterator<DestinationJob> 
 		// Destination values are null when the destination is empty
 		long desMinId = (typeToMigrate.getDestMinId() != null) ? typeToMigrate.getDestMinId() : 0L;
 		long desMaxId = (typeToMigrate.getDestMaxId() != null) ? typeToMigrate.getDestMaxId() : 0L;
-		long desCount = (typeToMigrate.getDestCount() != null) ? typeToMigrate.getDestCount() : 0L;
 
 		// If the source is empty we need to delete everything from the destination
 		if (typeToMigrate.getSrcMinId() == null) {

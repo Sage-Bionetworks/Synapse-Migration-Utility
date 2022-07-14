@@ -1,100 +1,77 @@
 package org.sagebionetworks.migration.utils;
 
+import java.util.Objects;
+
 import org.sagebionetworks.repo.model.migration.MigrationType;
 import org.sagebionetworks.repo.model.migration.MigrationTypeCount;
+import org.sagebionetworks.util.ValidateArgument;
 
+/**
+ * An immutable object that captures the state of both the source and
+ * destination for a single {@link MigrationType}.
+
+ *
+ */
 public class TypeToMigrateMetadata {
-	
-	private MigrationType type;
-	private Long srcMinId;
-	private Long srcMaxId;
-	private Long srcCount;
-	private Long destMinId;
-	private Long destMaxId;
-	private Long destCount;
-	
-	public TypeToMigrateMetadata() {
-		
-	};
-	
-	public TypeToMigrateMetadata(MigrationType t, Long sMin, Long sMax, Long sCnt, Long dMin, Long dMax, Long dCnt) {
-		this.setType(t);
-		this.setSrcMinId(sMin);
-		this.setSrcMaxId(sMax);
-		this.setSrcCount(sCnt);
-		this.setDestMinId(dMin);
-		this.setDestMaxId(dMax);
-		this.setDestCount(dCnt);
+
+	private final MigrationType type;
+	private final Long srcMinId;
+	private final Long srcMaxId;
+	private final Long srcCount;
+	private final Long destMinId;
+	private final Long destMaxId;
+	private final Long destCount;
+	private final boolean isSourceReadOnly;
+
+	public TypeToMigrateMetadata(boolean isSourceReadOnly, MigrationTypeCount source, MigrationTypeCount dest) {
+		ValidateArgument.required(source, "source");
+		ValidateArgument.required(source.getType(), "source.type");
+		ValidateArgument.required(dest, "dest");
+		if (!source.getType().equals(dest.getType())) {
+			throw new IllegalArgumentException(
+					String.format("Mismatch type source: '%s' dest: '%s'", source.getType(), dest.getType()));
+		}
+		this.type = source.getType();
+		this.srcMinId = source.getMinid();
+		this.srcMaxId = source.getMaxid();
+		this.srcCount = source.getCount();
+		this.destMinId = dest.getMinid();
+		this.destMaxId = dest.getMaxid();
+		this.destCount = dest.getCount();
+		this.isSourceReadOnly = isSourceReadOnly;
 	}
 
 	public MigrationType getType() {
 		return type;
 	}
 
-	public void setType(MigrationType type) {
-		this.type = type;
-	}
-
 	public Long getSrcMinId() {
 		return srcMinId;
-	}
-
-	public void setSrcMinId(Long srcMinId) {
-		this.srcMinId = srcMinId;
 	}
 
 	public Long getSrcMaxId() {
 		return srcMaxId;
 	}
 
-	public void setSrcMaxId(Long srcMaxId) {
-		this.srcMaxId = srcMaxId;
-	}
-
 	public Long getSrcCount() {
 		return srcCount;
-	}
-
-	public void setSrcCount(Long srcCount) {
-		this.srcCount = srcCount;
 	}
 
 	public Long getDestMinId() {
 		return destMinId;
 	}
 
-	public void setDestMinId(Long destMinId) {
-		this.destMinId = destMinId;
-	}
-
 	public Long getDestMaxId() {
 		return destMaxId;
-	}
-
-	public void setDestMaxId(Long destMaxId) {
-		this.destMaxId = destMaxId;
 	}
 
 	public Long getDestCount() {
 		return destCount;
 	}
 
-	public void setDestCount(Long destCount) {
-		this.destCount = destCount;
-	}
-	
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = ((prime*result)+((destCount == null)? 0 :destCount.hashCode()));
-		result = ((prime*result)+((destMaxId == null)? 0 :destMaxId.hashCode()));
-		result = ((prime*result)+((destMinId == null)? 0 :destMinId.hashCode()));
-		result = ((prime*result)+((srcCount == null)? 0 :srcCount.hashCode()));
-		result = ((prime*result)+((srcMaxId == null)? 0 :srcMaxId.hashCode()));
-		result = ((prime*result)+((srcMinId == null)? 0 :srcMinId.hashCode()));
-		result = ((prime*result)+((type == null)? 0 :type.hashCode()));
-		return result;
+		return Objects.hash(destCount, destMaxId, destMinId, isSourceReadOnly, srcCount, srcMaxId, srcMinId, type);
 	}
 
 	@Override
@@ -102,122 +79,60 @@ public class TypeToMigrateMetadata {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
+		if (!(obj instanceof TypeToMigrateMetadata)) {
 			return false;
 		}
-		if (this.getClass()!= obj.getClass()) {
-			return false;
-		}
-		
-		TypeToMigrateMetadata other = ((TypeToMigrateMetadata) obj);
-		if (destCount == null) {
-			if (other.destCount!= null) {
-				return false;
-			}
-		} else {
-			if (!destCount.equals(other.destCount)) {
-				return false;
-			}
-		}
-		if (srcCount == null) {
-			if (other.srcCount!= null) {
-				return false;
-			}
-		} else {
-			if (!srcCount.equals(other.srcCount)) {
-				return false;
-			}
-		}
-		
-		if (destMaxId == null) {
-			if (other.destMaxId!= null) {
-				return false;
-			}
-		} else {
-			if (!destMaxId.equals(other.destMaxId)) {
-				return false;
-			}
-		}
-		
-		if (srcMaxId == null) {
-			if (other.srcMaxId!= null) {
-				return false;
-			}
-		} else {
-			if (!srcMaxId.equals(other.srcMaxId)) {
-				return false;
-			}
-		}
-		
-		if (destMinId == null) {
-			if (other.destMinId!= null) {
-				return false;
-			}
-		} else {
-			if (!destMinId.equals(other.destMinId)) {
-				return false;
-			}
-		}
-		
-		if (srcMinId == null) {
-			if (other.srcMinId!= null) {
-				return false;
-			}
-		} else {
-			if (!srcMinId.equals(other.srcMinId)) {
-				return false;
-			}
-		}
-		
-		
-		if (type == null) {
-			if (other.type!= null) {
-				return false;
-			}
-		} else {
-			if (!type.equals(other.type)) {
-				return false;
-			}
-		}
-		return true;
+		TypeToMigrateMetadata other = (TypeToMigrateMetadata) obj;
+		return Objects.equals(destCount, other.destCount) && Objects.equals(destMaxId, other.destMaxId)
+				&& Objects.equals(destMinId, other.destMinId) && isSourceReadOnly == other.isSourceReadOnly
+				&& Objects.equals(srcCount, other.srcCount) && Objects.equals(srcMaxId, other.srcMaxId)
+				&& Objects.equals(srcMinId, other.srcMinId) && type == other.type;
 	}
 
-	/**
-	 * Adds toString method to pojo.
-	 * returns a string
-	 * 
-	 * @return
-	 */
 	@Override
 	public String toString() {
-		StringBuilder result;
-		result = new StringBuilder();
-		result.append("");
-		result.append("org.sagebionetworks.repo.model.migration.TypeToMigrateMetadata");
-		result.append(" [");
-		result.append("destCount=");
-		result.append(destCount);
-		result.append(" ");
-		result.append("destMaxId=");
-		result.append(destMaxId);
-		result.append(" ");
-		result.append("destMinId=");
-		result.append(destMinId);
-		result.append(" ");
-		result.append("srcCount=");
-		result.append(srcCount);
-		result.append(" ");
-		result.append("srcMaxId=");
-		result.append(srcMaxId);
-		result.append(" ");
-		result.append("srcMinId=");
-		result.append(srcMinId);
-		result.append(" ");
-		result.append("type=");
-		result.append(type);
-		result.append(" ");
-		result.append("]");
-		return result.toString();
+		return "TypeToMigrateMetadata [type=" + type + ", srcMinId=" + srcMinId + ", srcMaxId=" + srcMaxId
+				+ ", srcCount=" + srcCount + ", destMinId=" + destMinId + ", destMaxId=" + destMaxId + ", destCount="
+				+ destCount + ", isSourceReadOnly=" + isSourceReadOnly + "]";
+	}
+
+	public static class TypeToMigrateMetadataBuilder {
+
+		private boolean isSourceReadOnly;
+		private MigrationTypeCount source;
+		private MigrationTypeCount dest;
+
+		public TypeToMigrateMetadataBuilder(boolean isSourceReadOnly) {
+			this.isSourceReadOnly = isSourceReadOnly;
+		}
+
+		/**
+		 * @param isSourceReadOnly the isSourceReadOnly to set
+		 */
+		public TypeToMigrateMetadataBuilder setSourceReadOnly(boolean isSourceReadOnly) {
+			this.isSourceReadOnly = isSourceReadOnly;
+			return this;
+		}
+
+		/**
+		 * @param source the source to set
+		 */
+		public TypeToMigrateMetadataBuilder setSource(MigrationTypeCount source) {
+			this.source = source;
+			return this;
+		}
+
+		/**
+		 * @param dest the dest to set
+		 */
+		public TypeToMigrateMetadataBuilder setDest(MigrationTypeCount dest) {
+			this.dest = dest;
+			return this;
+		}
+
+		public TypeToMigrateMetadata build() {
+			return new TypeToMigrateMetadata(isSourceReadOnly, source, dest);
+		};
 	}
 
 }

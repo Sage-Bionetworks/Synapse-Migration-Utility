@@ -1,6 +1,8 @@
 package org.sagebionetworks.migration.utils;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -10,15 +12,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.sagebionetworks.repo.model.migration.MigrationType;
-import org.sagebionetworks.repo.model.migration.MigrationTypeCounts;
 import org.sagebionetworks.repo.model.migration.MigrationTypeCount;
 import org.sagebionetworks.repo.model.migration.MigrationTypeList;
+import org.sagebionetworks.migration.utils.TypeToMigrateMetadata.TypeToMigrateMetadataBuilder;
 
 public class ToolMigrationUtilsTest {
 	
 	List<MigrationTypeCount> srcTypeCounts;
 	List<MigrationTypeCount> destTypeCounts;
 	MigrationTypeList typesToMigrate;
+	private boolean isSourceReadOnly;
 
 	@Before
 	public void setUp() throws Exception {
@@ -26,6 +29,7 @@ public class ToolMigrationUtilsTest {
 		destTypeCounts = generateMigrationTypeCounts();
 		typesToMigrate = new MigrationTypeList();
 		typesToMigrate.setList(generateTypesToMigrate());
+		isSourceReadOnly = true;
 	}
 
 	@After
@@ -47,21 +51,21 @@ public class ToolMigrationUtilsTest {
 	@Test
 	public void testBuildTypesToMigrateMetadataInvalidArgs() throws Exception {
 		try {
-			ToolMigrationUtils.buildTypeToMigrateMetadata(null, destTypeCounts, typesToMigrate.getList());
+			ToolMigrationUtils.buildTypeToMigrateMetadata(isSourceReadOnly, null, destTypeCounts, typesToMigrate.getList());
 		} catch (IllegalArgumentException e) {
 			
 		} catch (Exception e) {
 			throw(e);
 		}
 		try {
-			ToolMigrationUtils.buildTypeToMigrateMetadata(srcTypeCounts, null, typesToMigrate.getList());
+			ToolMigrationUtils.buildTypeToMigrateMetadata(isSourceReadOnly, srcTypeCounts, null, typesToMigrate.getList());
 		} catch (IllegalArgumentException e) {
 			
 		} catch (Exception e) {
 			throw(e);
 		}
 		try {
-			ToolMigrationUtils.buildTypeToMigrateMetadata(srcTypeCounts, destTypeCounts, null);
+			ToolMigrationUtils.buildTypeToMigrateMetadata(isSourceReadOnly, srcTypeCounts, destTypeCounts, null);
 		} catch (IllegalArgumentException e) {
 			
 		} catch (Exception e) {
@@ -74,18 +78,16 @@ public class ToolMigrationUtilsTest {
 		List<TypeToMigrateMetadata> expectedMetadata = new LinkedList<TypeToMigrateMetadata>();
 		int idx = 0;
 		for (MigrationType t: typesToMigrate.getList()) {
-			TypeToMigrateMetadata d = new TypeToMigrateMetadata();
-			d.setDestCount(destTypeCounts.get(idx).getCount());
-			d.setDestMaxId(destTypeCounts.get(idx).getMaxid());
-			d.setDestMinId(destTypeCounts.get(idx).getMinid());
-			d.setSrcCount(srcTypeCounts.get(idx).getCount());
-			d.setSrcMaxId(srcTypeCounts.get(idx).getMaxid());
-			d.setSrcMinId(srcTypeCounts.get(idx).getMinid());
-			d.setType(t);
+			TypeToMigrateMetadata d = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+					.setSource(new MigrationTypeCount().setType(t).setMinid(srcTypeCounts.get(idx).getMinid())
+							.setMaxid(srcTypeCounts.get(idx).getMaxid()).setCount(srcTypeCounts.get(idx).getCount()))
+					.setDest(new MigrationTypeCount().setType(t).setMinid(destTypeCounts.get(idx).getMinid())
+							.setMaxid(destTypeCounts.get(idx).getMaxid()).setCount(destTypeCounts.get(idx).getCount()))
+					.build();
 			expectedMetadata.add(d);
 			idx++;
 		}
-		List<TypeToMigrateMetadata> l = ToolMigrationUtils.buildTypeToMigrateMetadata(srcTypeCounts, destTypeCounts, typesToMigrate.getList());
+		List<TypeToMigrateMetadata> l = ToolMigrationUtils.buildTypeToMigrateMetadata(isSourceReadOnly, srcTypeCounts, destTypeCounts, typesToMigrate.getList());
 		assertEquals(expectedMetadata, l);
 	}
 	
@@ -100,27 +102,26 @@ public class ToolMigrationUtilsTest {
 		List<TypeToMigrateMetadata> expectedMetadata = new LinkedList<TypeToMigrateMetadata>();
 		int idx = 0;
 		for (MigrationType t: typesToMigrate.getList()) {
-			TypeToMigrateMetadata d = new TypeToMigrateMetadata();
+			TypeToMigrateMetadata d;
 			if (idx == 0) {
-				d.setDestCount(0L);
-				d.setDestMaxId(null);
-				d.setDestMinId(null);
-				d.setSrcCount(0L);
-				d.setSrcMaxId(null);
-				d.setSrcMinId(null);
+				d = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+						.setSource(new MigrationTypeCount().setType(t).setMinid(null).setMaxid(null).setCount(0L))
+						.setDest(new MigrationTypeCount().setType(t).setMinid(null).setMaxid(null).setCount(0L))
+						.build();
 			} else {
-				d.setDestMaxId(destTypeCounts.get(idx).getMaxid());
-				d.setDestMinId(destTypeCounts.get(idx).getMinid());
-				d.setDestCount(destTypeCounts.get(idx).getCount());
-				d.setSrcCount(srcTypeCounts.get(idx).getCount());
-				d.setSrcMaxId(srcTypeCounts.get(idx).getMaxid());
-				d.setSrcMinId(srcTypeCounts.get(idx).getMinid());
+				d = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+						.setSource(new MigrationTypeCount().setType(t).setMinid(srcTypeCounts.get(idx).getMinid())
+								.setMaxid(srcTypeCounts.get(idx).getMaxid())
+								.setCount(srcTypeCounts.get(idx).getCount()))
+						.setDest(new MigrationTypeCount().setType(t).setMinid(destTypeCounts.get(idx).getMinid())
+								.setMaxid(destTypeCounts.get(idx).getMaxid())
+								.setCount(destTypeCounts.get(idx).getCount()))
+						.build();
 			}
-			d.setType(t);
 			expectedMetadata.add(d);
 			idx++;
 		}
-		List<TypeToMigrateMetadata> l = ToolMigrationUtils.buildTypeToMigrateMetadata(srcTypeCounts, destTypeCounts, typesToMigrate.getList());
+		List<TypeToMigrateMetadata> l = ToolMigrationUtils.buildTypeToMigrateMetadata(isSourceReadOnly, srcTypeCounts, destTypeCounts, typesToMigrate.getList());
 		assertEquals(expectedMetadata, l);
 	}
 	

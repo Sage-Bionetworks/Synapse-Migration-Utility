@@ -88,7 +88,8 @@ public class FullMigrationImplTest {
 		
 		when(mockTypeService.getMigrationTypeCounts(anyListOf(MigrationType.class))).thenReturn(countResultsOne, countResultsTwo);
 		
-		typesToMigrate = ToolMigrationUtils.buildTypeToMigrateMetadata(
+		boolean isSourceReadOnly = true;
+		typesToMigrate = ToolMigrationUtils.buildTypeToMigrateMetadata(isSourceReadOnly,
 				countResultsOne.getSourceResult(), countResultsOne.getDestinationResult(), commonPrimaryTypes);
 		
 		fullMigration = new FullMigrationImpl(mockLoggerFactory, mockStackStatusService, mockTypeService,

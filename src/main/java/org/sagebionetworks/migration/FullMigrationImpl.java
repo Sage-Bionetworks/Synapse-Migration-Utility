@@ -52,9 +52,12 @@ public class FullMigrationImpl implements FullMigration {
 		typeReporter.reportCountDifferences(countResults);
 		// Give the caller a chance to cancel before migration starts
 		typeReporter.runCountDownBeforeStart();
+		
+;
 
 		// Build the metadata for each type
 		List<TypeToMigrateMetadata> typesToMigrate = ToolMigrationUtils.buildTypeToMigrateMetadata(
+				stackStatusService.isSourceReadOnly(),
 				countResults.getSourceResult(), countResults.getDestinationResult(), commonPrimaryTypes);
 		// run the migration process asynchronously
 		logger.info("Starting the asynchronous of all types...");
