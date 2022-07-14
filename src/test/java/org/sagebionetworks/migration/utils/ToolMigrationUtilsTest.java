@@ -78,7 +78,7 @@ public class ToolMigrationUtilsTest {
 		List<TypeToMigrateMetadata> expectedMetadata = new LinkedList<TypeToMigrateMetadata>();
 		int idx = 0;
 		for (MigrationType t: typesToMigrate.getList()) {
-			TypeToMigrateMetadata d = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+			TypeToMigrateMetadata d = TypeToMigrateMetadata.builder(isSourceReadOnly)
 					.setSource(new MigrationTypeCount().setType(t).setMinid(srcTypeCounts.get(idx).getMinid())
 							.setMaxid(srcTypeCounts.get(idx).getMaxid()).setCount(srcTypeCounts.get(idx).getCount()))
 					.setDest(new MigrationTypeCount().setType(t).setMinid(destTypeCounts.get(idx).getMinid())
@@ -104,12 +104,12 @@ public class ToolMigrationUtilsTest {
 		for (MigrationType t: typesToMigrate.getList()) {
 			TypeToMigrateMetadata d;
 			if (idx == 0) {
-				d = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+				d = TypeToMigrateMetadata.builder(isSourceReadOnly)
 						.setSource(new MigrationTypeCount().setType(t).setMinid(null).setMaxid(null).setCount(0L))
 						.setDest(new MigrationTypeCount().setType(t).setMinid(null).setMaxid(null).setCount(0L))
 						.build();
 			} else {
-				d = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+				d = TypeToMigrateMetadata.builder(isSourceReadOnly)
 						.setSource(new MigrationTypeCount().setType(t).setMinid(srcTypeCounts.get(idx).getMinid())
 								.setMaxid(srcTypeCounts.get(idx).getMaxid())
 								.setCount(srcTypeCounts.get(idx).getCount()))

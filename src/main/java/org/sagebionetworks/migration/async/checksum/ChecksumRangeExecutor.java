@@ -13,7 +13,6 @@ import org.sagebionetworks.migration.async.ResultPair;
 import org.sagebionetworks.migration.utils.TypeToMigrateMetadata;
 import org.sagebionetworks.repo.model.migration.BatchChecksumRequest;
 import org.sagebionetworks.repo.model.migration.BatchChecksumResponse;
-import org.sagebionetworks.repo.model.migration.MigrationType;
 import org.sagebionetworks.repo.model.migration.RangeChecksum;
 
 /**

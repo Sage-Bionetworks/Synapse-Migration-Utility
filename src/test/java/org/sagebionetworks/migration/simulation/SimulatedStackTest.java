@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.sagebionetworks.repo.model.migration.MigrationType.CHANGE;
+import static org.sagebionetworks.repo.model.migration.MigrationType.*;
 import static org.sagebionetworks.repo.model.migration.MigrationType.PRINCIPAL;
 
 import java.io.File;
@@ -39,11 +39,12 @@ public class SimulatedStackTest {
 
 		// call under test
 		MigrationTypeCounts result = stack.executeAsyncMigrationTypeCountsRequest(
-				new AsyncMigrationTypeCountsRequest().setTypes(List.of(CHANGE, PRINCIPAL)));
+				new AsyncMigrationTypeCountsRequest().setTypes(List.of(PRINCIPAL, CHANGE, ACTIVITY)));
 
 		MigrationTypeCounts expected = new MigrationTypeCounts()
 				.setList(List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(12L).setMaxid(42L).setCount(31L),
-						new MigrationTypeCount().setType(CHANGE).setMinid(4L).setMaxid(101L).setCount(98L)));
+						new MigrationTypeCount().setType(CHANGE).setMinid(4L).setMaxid(101L).setCount(98L),
+						new MigrationTypeCount().setType(ACTIVITY).setCount(0L).setMinid(null).setMaxid(null)));
 		assertEquals(expected, result);
 	}
 
@@ -60,12 +61,29 @@ public class SimulatedStackTest {
 
 		// call under test
 		MigrationTypeCounts result = stack.executeAsyncMigrationTypeCountsRequest(
-				new AsyncMigrationTypeCountsRequest().setTypes(List.of(CHANGE, PRINCIPAL)));
+				new AsyncMigrationTypeCountsRequest().setTypes(List.of(PRINCIPAL, CHANGE)));
 		MigrationTypeCounts expected = new MigrationTypeCounts()
 				.setList(List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(1L).setMaxid(15L).setCount(6L),
 						new MigrationTypeCount().setType(CHANGE).setMinid(2L).setMaxid(18L).setCount(9L)
 
 				));
+		assertEquals(expected, result);
+	}
+	
+	@Test
+	public void testExecuteAsyncMigrationTypeCountsRequestWithEmpty() {
+
+		SimulatedStack stack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setCount(0L),
+						new MigrationTypeCount().setType(CHANGE).setMinid(4L).setMaxid(101L)));
+
+		// call under test
+		MigrationTypeCounts result = stack.executeAsyncMigrationTypeCountsRequest(
+				new AsyncMigrationTypeCountsRequest().setTypes(List.of(PRINCIPAL, CHANGE)));
+
+		MigrationTypeCounts expected = new MigrationTypeCounts()
+				.setList(List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(null).setMaxid(null).setCount(0L),
+						new MigrationTypeCount().setType(CHANGE).setMinid(4L).setMaxid(101L).setCount(98L)));
 		assertEquals(expected, result);
 	}
 

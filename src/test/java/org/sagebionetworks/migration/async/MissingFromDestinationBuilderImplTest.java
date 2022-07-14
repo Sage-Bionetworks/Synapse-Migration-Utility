@@ -74,13 +74,13 @@ public class MissingFromDestinationBuilderImplTest {
 	
 	@Test
 	public void testBuildDestinationJobs() {
-		TypeToMigrateMetadata one = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata one = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(
 						new MigrationTypeCount().setType(MigrationType.NODE).setMinid(1L).setMaxid(99L))
 				.setDest(new MigrationTypeCount().setType(MigrationType.NODE).setMinid(null).setMaxid(null))
 				.build();
 		
-		TypeToMigrateMetadata two = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata two = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(
 						new MigrationTypeCount().setType(MigrationType.ACTIVITY).setMinid(4L).setMaxid(7L))
 				.setDest(new MigrationTypeCount().setType(MigrationType.ACTIVITY).setMinid(null).setMaxid(null))
@@ -116,13 +116,13 @@ public class MissingFromDestinationBuilderImplTest {
 
 	@Test
 	public void testBuildDestinationJobsWithNullMin() {
-		TypeToMigrateMetadata one = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata one = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(
 						new MigrationTypeCount().setType(MigrationType.NODE).setMinid(5L).setMaxid(20L))
 				.setDest(new MigrationTypeCount().setType(MigrationType.NODE).setMinid(null).setMaxid(null))
 				.build();
 
-		TypeToMigrateMetadata two = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata two = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(
 						new MigrationTypeCount().setType(MigrationType.ACTIVITY).setMinid(null).setMaxid(null))
 				.setDest(new MigrationTypeCount().setType(MigrationType.ACTIVITY).setMinid(3L).setMaxid(9L))

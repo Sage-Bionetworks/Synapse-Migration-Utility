@@ -92,7 +92,7 @@ public class TypeToMigrateMetadata {
 		private MigrationTypeCount source;
 		private MigrationTypeCount dest;
 
-		public TypeToMigrateMetadataBuilder(boolean isSourceReadOnly) {
+		private TypeToMigrateMetadataBuilder(boolean isSourceReadOnly) {
 			this.isSourceReadOnly = isSourceReadOnly;
 		}
 

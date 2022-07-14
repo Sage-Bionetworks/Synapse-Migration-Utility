@@ -67,7 +67,7 @@ public class MissingFromDestinationIteratorTest {
 	
 	@Test
 	public void testNothingToDo() {
-		TypeToMigrateMetadata ranges = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata ranges = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(99L).setCount(98L))
 				.setDest(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(99L).setCount(98L)).build();
 		
@@ -80,7 +80,7 @@ public class MissingFromDestinationIteratorTest {
 	
 	@Test
 	public void testDestinationIsNull() {
-		TypeToMigrateMetadata ranges = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata ranges = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(99L).setCount(98L))
 				.setDest(new MigrationTypeCount().setType(type).setMinid(null).setMaxid(null).setCount(null)).build();
 		
@@ -95,7 +95,7 @@ public class MissingFromDestinationIteratorTest {
 	
 	@Test
 	public void testSourceMinNull() {
-		TypeToMigrateMetadata ranges = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata ranges = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(new MigrationTypeCount().setType(type).setMinid(null).setMaxid(null).setCount(98L))
 				.setDest(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(99L).setCount(98L)).build();
 
@@ -109,7 +109,7 @@ public class MissingFromDestinationIteratorTest {
 	
 	@Test
 	public void testSouceMinLessDestinationMin() {
-		TypeToMigrateMetadata ranges = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata ranges = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(99L).setCount(98L))
 				.setDest(new MigrationTypeCount().setType(type).setMinid(11L).setMaxid(99L).setCount(88L)).build();
 		
@@ -125,7 +125,7 @@ public class MissingFromDestinationIteratorTest {
 	
 	@Test
 	public void testDestinationMinLessSourceMin() {
-		TypeToMigrateMetadata ranges = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata ranges = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(new MigrationTypeCount().setType(type).setMinid(12L).setMaxid(99L).setCount(88L))
 				.setDest(new MigrationTypeCount().setType(type).setMinid(2L).setMaxid(99L).setCount(98L)).build();
 		
@@ -140,7 +140,7 @@ public class MissingFromDestinationIteratorTest {
 	
 	@Test
 	public void testSouceMaxMoreDestinationMax() {
-		TypeToMigrateMetadata ranges = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata ranges = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(99L).setCount(98L))
 				.setDest(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(89L).setCount(88L)).build();
 		
@@ -155,7 +155,7 @@ public class MissingFromDestinationIteratorTest {
 	
 	@Test
 	public void testDestinationMaxMoreSourceMax() {
-		TypeToMigrateMetadata ranges = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata ranges = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(99L).setCount(98L))
 				.setDest(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(102L).setCount(101L)).build();
 		
@@ -170,7 +170,7 @@ public class MissingFromDestinationIteratorTest {
 	
 	@Test
 	public void testSourceMinLessDestinationMinAndSourceMaxGreaterDestinationMax() {
-		TypeToMigrateMetadata ranges = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata ranges = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(99L).setCount(98L))
 				.setDest(new MigrationTypeCount().setType(type).setMinid(25L).setMaxid(51L).setCount(26L)).build();
 		
@@ -189,7 +189,7 @@ public class MissingFromDestinationIteratorTest {
 
 	@Test
 	public void testSourceMaxLessThanOrEqualDestinationMin() {
-		TypeToMigrateMetadata ranges = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata ranges = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(1L).setCount(1L))
 				.setDest(new MigrationTypeCount().setType(type).setMinid(1L).setMaxid(8L).setCount(5L)).build();
 

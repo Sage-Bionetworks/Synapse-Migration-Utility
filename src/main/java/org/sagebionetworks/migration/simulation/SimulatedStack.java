@@ -135,9 +135,14 @@ public class SimulatedStack {
 	void buildRowsForEachType(List<MigrationTypeCount> stackData) {
 		typeToRows = new LinkedHashMap<>(stackData.size());
 		for (MigrationTypeCount typeCount : stackData) {
-			List<Row> rowIds = new ArrayList<>((int) (typeCount.getMaxid() - typeCount.getMinid()));
-			for (Long i = typeCount.getMinid(); i <= typeCount.getMaxid(); i++) {
-				rowIds.add(new Row().setRowId(i).setEtag(UUID.randomUUID().toString()));
+			List<Row> rowIds = null;
+			if (Long.valueOf(0).equals(typeCount.getCount())) {
+				rowIds = new ArrayList<>();
+			} else {
+				rowIds = new ArrayList<>((int) (typeCount.getMaxid() - typeCount.getMinid()));
+				for (Long i = typeCount.getMinid(); i <= typeCount.getMaxid(); i++) {
+					rowIds.add(new Row().setRowId(i).setEtag(UUID.randomUUID().toString()));
+				}
 			}
 			typeToRows.put(typeCount.getType(), rowIds);
 		}
@@ -234,17 +239,23 @@ public class SimulatedStack {
 
 	public MigrationTypeCounts executeAsyncMigrationTypeCountsRequest(AsyncMigrationTypeCountsRequest request) {
 		List<MigrationTypeCount> list = new ArrayList<>(typeToRows.size());
-		typeToRows.forEach((k, v) -> {
-			long min = Long.MAX_VALUE;
-			long max = Long.MIN_VALUE;
-			long count = 0;
-			for (Row row : v) {
-				min = Math.min(min, row.getRowId());
-				max = Math.max(max, row.getRowId());
-				count++;
+		for(MigrationType type: request.getTypes()) {
+			List<Row> rows = typeToRows.get(type);
+			if(rows == null || rows.isEmpty()) {
+				// represents a type that does not exist or is empty in the stack.
+				list.add(new MigrationTypeCount().setType(type).setCount(0L).setMinid(null).setMaxid(null));
+			}else {
+				long min = Long.MAX_VALUE;
+				long max = Long.MIN_VALUE;
+				long count = 0;
+				for (Row row : rows) {
+					min = Math.min(min, row.getRowId());
+					max = Math.max(max, row.getRowId());
+					count++;
+				}
+				list.add(new MigrationTypeCount().setType(type).setCount(count).setMinid(min).setMaxid(max));
 			}
-			list.add(new MigrationTypeCount().setType(k).setCount(count).setMinid(min).setMaxid(max));
-		});
+		}
 		return new MigrationTypeCounts().setList(list);
 	}
 

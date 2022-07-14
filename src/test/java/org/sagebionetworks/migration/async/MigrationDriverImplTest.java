@@ -56,7 +56,7 @@ public class MigrationDriverImplTest {
 		missingJobs = Lists.newArrayList(jobOne, jobTwo);
 		deltaJobs = Lists.newArrayList(jobThree);
 
-		TypeToMigrateMetadata toMigrate = new TypeToMigrateMetadataBuilder(isSourceReadOnly)
+		TypeToMigrateMetadata toMigrate = TypeToMigrateMetadata.builder(isSourceReadOnly)
 				.setSource(
 						new MigrationTypeCount().setType(MigrationType.NODE).setMinid(1L).setMaxid(99L).setCount(98L))
 				.setDest(new MigrationTypeCount().setType(MigrationType.NODE).setMinid(1L).setMaxid(4L).setCount(3L))
