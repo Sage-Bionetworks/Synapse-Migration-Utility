@@ -21,10 +21,12 @@ import org.sagebionetworks.migration.async.BackupJobExecutor;
 import org.sagebionetworks.migration.async.DeleteDestinationJob;
 import org.sagebionetworks.migration.async.DestinationJob;
 import org.sagebionetworks.migration.async.ResultPair;
+import org.sagebionetworks.migration.utils.TypeToMigrateMetadata;
 import org.sagebionetworks.repo.model.migration.AdminResponse;
 import org.sagebionetworks.repo.model.migration.BatchChecksumRequest;
 import org.sagebionetworks.repo.model.migration.BatchChecksumResponse;
 import org.sagebionetworks.repo.model.migration.MigrationType;
+import org.sagebionetworks.repo.model.migration.MigrationTypeCount;
 import org.sagebionetworks.repo.model.migration.RangeChecksum;
 
 import com.google.common.collect.Lists;
@@ -108,9 +110,12 @@ public class ChecksumRangeExecutorTest {
 		resultPair.setSourceResult(sourceResponse);
 		resultPair.setDestinationResult(destinationResponse);
 		when(mockAsynchronousJobExecutor.executeSourceAndDestinationJob(any(), any())).thenReturn(resultPair);
+		
+		TypeToMigrateMetadata metadata = TypeToMigrateMetadata.builder(false)
+				.setSource(new MigrationTypeCount().setMinid(minimumId).setMaxid(maximumId).setType(type))
+				.setDest(new MigrationTypeCount().setType(type)).build();
 
-		extractor = new ChecksumRangeExecutor(mockAsynchronousJobExecutor, mockBackupJobExecutor, batchSize, type,
-				minimumId, maximumId, salt);
+		extractor = new ChecksumRangeExecutor(mockAsynchronousJobExecutor, mockBackupJobExecutor, batchSize, metadata, salt);
 	}
 
 	@Test
@@ -231,8 +236,11 @@ public class ChecksumRangeExecutorTest {
 	@Test
 	public void testFindAllMismatchedRangesMinIdNull() {
 		when(mockAsynchronousJobExecutor.executeSourceAndDestinationJob(any(), any())).thenThrow(new IllegalArgumentException());
-		extractor = new ChecksumRangeExecutor(mockAsynchronousJobExecutor, mockBackupJobExecutor, batchSize, type,
-				null, null, salt);
+		TypeToMigrateMetadata metadata = TypeToMigrateMetadata.builder(false)
+				.setSource(new MigrationTypeCount().setMinid(null).setMaxid(null).setType(type))
+				.setDest(new MigrationTypeCount().setType(type)).build();
+		
+		extractor = new ChecksumRangeExecutor(mockAsynchronousJobExecutor, mockBackupJobExecutor, batchSize, metadata, salt);
 		// call under test
 		Iterator<RangeChecksum> it = extractor.findAllMismatchedRanges();
 		assertNotNull(it);

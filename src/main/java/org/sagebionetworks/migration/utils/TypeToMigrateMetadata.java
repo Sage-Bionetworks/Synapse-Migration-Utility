@@ -9,18 +9,15 @@ import org.sagebionetworks.util.ValidateArgument;
 /**
  * An immutable object that captures the state of both the source and
  * destination for a single {@link MigrationType}.
-
- *
+ * 
  */
 public class TypeToMigrateMetadata {
 
 	private final MigrationType type;
 	private final Long srcMinId;
 	private final Long srcMaxId;
-	private final Long srcCount;
 	private final Long destMinId;
 	private final Long destMaxId;
-	private final Long destCount;
 	private final boolean isSourceReadOnly;
 
 	public TypeToMigrateMetadata(boolean isSourceReadOnly, MigrationTypeCount source, MigrationTypeCount dest) {
@@ -34,10 +31,8 @@ public class TypeToMigrateMetadata {
 		this.type = source.getType();
 		this.srcMinId = source.getMinid();
 		this.srcMaxId = source.getMaxid();
-		this.srcCount = source.getCount();
 		this.destMinId = dest.getMinid();
 		this.destMaxId = dest.getMaxid();
-		this.destCount = dest.getCount();
 		this.isSourceReadOnly = isSourceReadOnly;
 	}
 
@@ -53,10 +48,6 @@ public class TypeToMigrateMetadata {
 		return srcMaxId;
 	}
 
-	public Long getSrcCount() {
-		return srcCount;
-	}
-
 	public Long getDestMinId() {
 		return destMinId;
 	}
@@ -64,14 +55,14 @@ public class TypeToMigrateMetadata {
 	public Long getDestMaxId() {
 		return destMaxId;
 	}
-
-	public Long getDestCount() {
-		return destCount;
+	
+	public static TypeToMigrateMetadataBuilder builder(boolean isSourceReadOnly) {
+		return new TypeToMigrateMetadataBuilder(isSourceReadOnly);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(destCount, destMaxId, destMinId, isSourceReadOnly, srcCount, srcMaxId, srcMinId, type);
+		return Objects.hash(destMaxId, destMinId, isSourceReadOnly, srcMaxId, srcMinId, type);
 	}
 
 	@Override
@@ -83,17 +74,16 @@ public class TypeToMigrateMetadata {
 			return false;
 		}
 		TypeToMigrateMetadata other = (TypeToMigrateMetadata) obj;
-		return Objects.equals(destCount, other.destCount) && Objects.equals(destMaxId, other.destMaxId)
-				&& Objects.equals(destMinId, other.destMinId) && isSourceReadOnly == other.isSourceReadOnly
-				&& Objects.equals(srcCount, other.srcCount) && Objects.equals(srcMaxId, other.srcMaxId)
+		return Objects.equals(destMaxId, other.destMaxId) && Objects.equals(destMinId, other.destMinId)
+				&& isSourceReadOnly == other.isSourceReadOnly && Objects.equals(srcMaxId, other.srcMaxId)
 				&& Objects.equals(srcMinId, other.srcMinId) && type == other.type;
 	}
 
 	@Override
 	public String toString() {
 		return "TypeToMigrateMetadata [type=" + type + ", srcMinId=" + srcMinId + ", srcMaxId=" + srcMaxId
-				+ ", srcCount=" + srcCount + ", destMinId=" + destMinId + ", destMaxId=" + destMaxId + ", destCount="
-				+ destCount + ", isSourceReadOnly=" + isSourceReadOnly + "]";
+				+ ", destMinId=" + destMinId + ", destMaxId=" + destMaxId + ", isSourceReadOnly=" + isSourceReadOnly
+				+ "]";
 	}
 
 	public static class TypeToMigrateMetadataBuilder {

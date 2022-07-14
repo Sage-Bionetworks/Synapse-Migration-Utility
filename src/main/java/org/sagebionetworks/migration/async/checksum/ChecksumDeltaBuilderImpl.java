@@ -29,8 +29,7 @@ public class ChecksumDeltaBuilderImpl implements ChecksumDeltaBuilder {
 		// Concatenate the iterators for each type.
 		Iterator<DestinationJob> iterator = new LinkedList<DestinationJob>().iterator();
 		for (TypeToMigrateMetadata primary : primaryTypes) {
-			Iterator<DestinationJob> typeIterator = rangeProvider.providerRangeCheck(primary.getType(),
-					primary.getSrcMinId(), primary.getSrcMaxId(), salt);
+			Iterator<DestinationJob> typeIterator = rangeProvider.providerRangeCheck(primary, salt);
 			iterator = Iterators.concat(iterator, typeIterator);
 		}
 		return iterator;
