@@ -93,7 +93,6 @@ public class MissingFromDestinationIterator implements Iterator<DestinationJob> 
 					jobIterator = Iterators.concat(jobIterator, iterator);
 				}
 			}
-
 		}
 		return jobIterator.hasNext();
 	}

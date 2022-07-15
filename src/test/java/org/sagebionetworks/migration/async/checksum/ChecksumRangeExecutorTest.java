@@ -18,7 +18,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.sagebionetworks.migration.async.AsynchronousJobExecutor;
 import org.sagebionetworks.migration.async.BackupJobExecutor;
-import org.sagebionetworks.migration.async.DeleteDestinationJob;
+import org.sagebionetworks.migration.async.RestoreDestinationJob;
 import org.sagebionetworks.migration.async.DestinationJob;
 import org.sagebionetworks.migration.async.ResultPair;
 import org.sagebionetworks.migration.utils.TypeToMigrateMetadata;
@@ -62,17 +62,14 @@ public class ChecksumRangeExecutorTest {
 		salt = "salt";
 
 		// Setup to return two jobs
-		DeleteDestinationJob one = new DeleteDestinationJob();
+		RestoreDestinationJob one = new RestoreDestinationJob(type, "one");
 		one.setMigrationType(type);
-		one.setRowIdsToDelete(Lists.newArrayList(123L, 456L));
-		DeleteDestinationJob two = new DeleteDestinationJob();
+		RestoreDestinationJob two = new RestoreDestinationJob(type, "two");
 		two.setMigrationType(type);
-		two.setRowIdsToDelete(Lists.newArrayList(444L));
 		jobsOne = Lists.newArrayList(one, two);
 
-		DeleteDestinationJob three = new DeleteDestinationJob();
+		RestoreDestinationJob three = new RestoreDestinationJob(type, "three");
 		three.setMigrationType(type);
-		three.setRowIdsToDelete(Lists.newArrayList(555L));
 		jobsTwo = Lists.newArrayList(three);
 
 		when(mockBackupJobExecutor.executeBackupJob(any(MigrationType.class), any(Long.class), any(Long.class)))
