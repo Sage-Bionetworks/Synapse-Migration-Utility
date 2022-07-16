@@ -89,7 +89,7 @@ public class MissingFromDestinationIteratorTest {
 		assertEquals(one, iterator.next());
 		assertFalse(iterator.hasNext());
 		// should backup the full range for this case
-		verify(mockBackupJobExecutor).executeBackupJob(type, 1L, 100L);
+		verify(mockBackupJobExecutor).executeBackupJob(type, 1L, 99L);
 		verify(mockBackupJobExecutor, times(1)).executeBackupJob(any(MigrationType.class), anyLong(), anyLong());
 	}
 	
@@ -104,7 +104,7 @@ public class MissingFromDestinationIteratorTest {
 		// call under test
 		it.hasNext();
 
-		verify(mockBackupJobExecutor).executeBackupJob(type, 1L, 100L);
+		verify(mockBackupJobExecutor).executeBackupJob(type, 1L, 99L);
 	}
 	
 	@Test
@@ -118,7 +118,7 @@ public class MissingFromDestinationIteratorTest {
 		assertEquals(one, iterator.next());
 		assertFalse(iterator.hasNext());
 		// should backup the full range for this case
-		verify(mockBackupJobExecutor).executeBackupJob(type, 1L, 12L);
+		verify(mockBackupJobExecutor).executeBackupJob(type, 1L, 11L);
 		verify(mockBackupJobExecutor, times(1)).executeBackupJob(any(MigrationType.class), anyLong(), anyLong());
 	}
 	
@@ -134,7 +134,7 @@ public class MissingFromDestinationIteratorTest {
 		assertEquals(one, iterator.next());
 		assertFalse(iterator.hasNext());
 		// should backup the full range for this case
-		verify(mockBackupJobExecutor).executeBackupJob(type, 2L, 13L);
+		verify(mockBackupJobExecutor).executeBackupJob(type, 2L, 12L);
 		verify(mockBackupJobExecutor, times(1)).executeBackupJob(any(MigrationType.class), anyLong(), anyLong());
 	}
 	
@@ -149,7 +149,7 @@ public class MissingFromDestinationIteratorTest {
 		assertEquals(one, iterator.next());
 		assertFalse(iterator.hasNext());
 		// should backup the full range for this case
-		verify(mockBackupJobExecutor).executeBackupJob(type, 89L, 100L);
+		verify(mockBackupJobExecutor).executeBackupJob(type, 89L, 99L);
 		verify(mockBackupJobExecutor, times(1)).executeBackupJob(any(MigrationType.class), anyLong(), anyLong());
 	}
 	
@@ -164,7 +164,7 @@ public class MissingFromDestinationIteratorTest {
 		assertEquals(one, iterator.next());
 		assertFalse(iterator.hasNext());
 		// should backup the full range for this case
-		verify(mockBackupJobExecutor).executeBackupJob(type, 99L, 103L);
+		verify(mockBackupJobExecutor).executeBackupJob(type, 99L, 102L);
 		verify(mockBackupJobExecutor, times(1)).executeBackupJob(any(MigrationType.class), anyLong(), anyLong());
 	}
 	
@@ -182,8 +182,8 @@ public class MissingFromDestinationIteratorTest {
 		assertFalse(iterator.hasNext());
 		
 		// should backup the full range for this case
-		verify(mockBackupJobExecutor).executeBackupJob(type, 1L, 26L);
-		verify(mockBackupJobExecutor).executeBackupJob(type, 51L, 100L);
+		verify(mockBackupJobExecutor).executeBackupJob(type, 1L, 25L);
+		verify(mockBackupJobExecutor).executeBackupJob(type, 51L, 99L);
 		verify(mockBackupJobExecutor, times(2)).executeBackupJob(any(MigrationType.class), anyLong(), anyLong());
 	}
 
@@ -197,7 +197,7 @@ public class MissingFromDestinationIteratorTest {
 
 		assertTrue(iterator.hasNext());
 
-		verify(mockBackupJobExecutor).executeBackupJob(type, 1L, 9L);
+		verify(mockBackupJobExecutor).executeBackupJob(type, 1L, 8L);
 	}
 
 }

@@ -71,7 +71,7 @@ public class MissingFromDestinationIterator implements Iterator<DestinationJob> 
 			if (maxCommonId <= minCommonId) {
 				// no rows common between the source and destination so a full backup of the source is required.
 				long minimumId = srcMinId;
-				long maximumId = absoluteMaxId + 1;
+				long maximumId = absoluteMaxId;
 				Iterator<DestinationJob> iterator = backupJobExecutor.executeBackupJob(migrationType, minimumId,
 						maximumId);
 				jobIterator = Iterators.concat(jobIterator, iterator);
@@ -79,7 +79,7 @@ public class MissingFromDestinationIterator implements Iterator<DestinationJob> 
 				if (absoluteMinId < minCommonId) {
 					// backup the lower range outside of the common box.
 					long minimumId = absoluteMinId;
-					long maximumId = minCommonId + 1;
+					long maximumId = minCommonId;
 					Iterator<DestinationJob> iterator = backupJobExecutor.executeBackupJob(migrationType, minimumId,
 							maximumId);
 					jobIterator = Iterators.concat(jobIterator, iterator);
@@ -87,7 +87,7 @@ public class MissingFromDestinationIterator implements Iterator<DestinationJob> 
 				if (absoluteMaxId > maxCommonId) {
 					// backup the upper range outside of the common box.
 					long minimumId = maxCommonId;
-					long maximumId = absoluteMaxId + 1;
+					long maximumId = absoluteMaxId;
 					Iterator<DestinationJob> iterator = backupJobExecutor.executeBackupJob(migrationType, minimumId,
 							maximumId);
 					jobIterator = Iterators.concat(jobIterator, iterator);

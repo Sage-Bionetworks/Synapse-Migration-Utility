@@ -8,7 +8,6 @@ import static org.sagebionetworks.repo.model.migration.MigrationType.PRINCIPAL;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -65,7 +64,6 @@ public class SimulatedMigrationIntegrationTest {
 	 * each type must be captured at the beginning of migration and not exceeded
 	 * when executing any backup job.
 	 */
-	@Ignore // See: https://sagebionetworks.jira.com/browse/PLFM-7384
 	@Test
 	public void tesMigrationWithHighWaterMark() {
 
@@ -229,6 +227,5 @@ public class SimulatedMigrationIntegrationTest {
 		// the two stacks should be synchronized.
 		assertEquals(sourceStack.getRowsOfType(PRINCIPAL), destinationStack.getRowsOfType(PRINCIPAL));
 	}
-
 
 }

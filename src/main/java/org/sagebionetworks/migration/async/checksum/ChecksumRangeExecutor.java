@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.sagebionetworks.migration.async.AsynchronousJobExecutor;
 import org.sagebionetworks.migration.async.BackupJobExecutor;
@@ -79,6 +80,8 @@ public class ChecksumRangeExecutor implements Iterator<DestinationJob> {
 			// Fix for PLFM-6551, the bin numbers need to drive the backup range.
 			long binStart = misMatchRange.getBinNumber()*batchSize;
 			long binEnd = binStart+batchSize-1;
+			// the max cannot exceed the max of max to respect the high-water-mark.
+			binEnd = Math.min(binEnd, metadata.getMaxOfMax().get());
 			lastBackupJobs = backupJobExecutor.executeBackupJob(metadata.getType(), binStart, binEnd);
 			return lastBackupJobs.hasNext();
 		}
@@ -97,12 +100,14 @@ public class ChecksumRangeExecutor implements Iterator<DestinationJob> {
 	 */
 	Iterator<RangeChecksum> findAllMismatchedRanges() {
 		List<RangeChecksum> mismatchedRangesList = new LinkedList<>();
-		if (metadata.getSrcMinId() != null) {
+		Optional<Long> minOfMins = metadata.getMinOfMins();
+		Optional<Long> maxOfMax = metadata.getMaxOfMax();
+		if (minOfMins.isPresent() && maxOfMax.isPresent()) {
 			BatchChecksumRequest request = new BatchChecksumRequest();
 			request.setMigrationType(metadata.getType());
 			request.setBatchSize(this.batchSize);
-			request.setMinimumId(metadata.getSrcMinId());
-			request.setMaximumId(metadata.getSrcMaxId());
+			request.setMinimumId(minOfMins.get());
+			request.setMaximumId(maxOfMax.get());
 			request.setSalt(this.salt);
 			// get all checksums for this range from both the source and destination.
 			ResultPair<BatchChecksumResponse> results = asynchronousJobExecutor.executeSourceAndDestinationJob(request,

@@ -1,6 +1,7 @@
 package org.sagebionetworks.migration.utils;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import org.sagebionetworks.repo.model.migration.MigrationType;
 import org.sagebionetworks.repo.model.migration.MigrationTypeCount;
@@ -54,6 +55,42 @@ public class TypeToMigrateMetadata {
 
 	public Long getDestMaxId() {
 		return destMaxId;
+	}
+	
+	/**
+	 * Get the minimum of the minimums rowId of both the source and destination.
+	 * 
+	 * @return {@link Optional#empty()} if both source and destination minimums are
+	 *         null.
+	 */
+	public Optional<Long> getMinOfMins(){
+		if(srcMinId != null && destMinId != null) {
+			return Optional.of(Math.min(srcMinId, destMinId));
+		}
+		if(srcMinId != null) {
+			return Optional.of(srcMinId);
+		}else {
+			return Optional.ofNullable(destMinId);
+		}
+	}
+	
+	/**
+	 * Get the maximum of the maximum row ID of both the source and destination.
+	 * @return @return {@link Optional#empty()} When the migration of this type is not possible.
+	 */
+	public Optional<Long> getMaxOfMax() {
+		if (!isSourceReadOnly) {
+			// The source max ID cannot be exceeded when the source is in read-write mode.
+			return Optional.ofNullable(srcMaxId);
+		}
+		if (srcMaxId != null && destMaxId != null) {
+			return Optional.of(Math.max(destMaxId, srcMaxId));
+		}
+		if (srcMaxId != null) {
+			return Optional.of(srcMaxId);
+		} else {
+			return Optional.ofNullable(destMaxId);
+		}
 	}
 	
 	public static TypeToMigrateMetadataBuilder builder(boolean isSourceReadOnly) {

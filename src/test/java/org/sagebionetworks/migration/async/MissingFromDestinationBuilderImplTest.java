@@ -153,7 +153,7 @@ public class MissingFromDestinationBuilderImplTest {
 		assertEquals("three", restoreJob.getBackupFileKey());
 		verify(mockBackupJobExecutor, times(2)).executeBackupJob(any(), minIdCaptor.capture(), maxIdCaptor.capture());
 		assertEquals(Arrays.asList(5L, 3L), minIdCaptor.getAllValues());
-		assertEquals(Arrays.asList(21L, 10L), maxIdCaptor.getAllValues());
+		assertEquals(Arrays.asList(20L, 9L), maxIdCaptor.getAllValues());
 
 		assertFalse(iterator.hasNext());
 	}
