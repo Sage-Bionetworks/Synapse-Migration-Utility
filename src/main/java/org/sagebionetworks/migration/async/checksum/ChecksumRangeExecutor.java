@@ -5,14 +5,15 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.sagebionetworks.migration.async.AsynchronousJobExecutor;
 import org.sagebionetworks.migration.async.BackupJobExecutor;
 import org.sagebionetworks.migration.async.DestinationJob;
 import org.sagebionetworks.migration.async.ResultPair;
+import org.sagebionetworks.migration.utils.TypeToMigrateMetadata;
 import org.sagebionetworks.repo.model.migration.BatchChecksumRequest;
 import org.sagebionetworks.repo.model.migration.BatchChecksumResponse;
-import org.sagebionetworks.repo.model.migration.MigrationType;
 import org.sagebionetworks.repo.model.migration.RangeChecksum;
 
 /**
@@ -27,15 +28,13 @@ import org.sagebionetworks.repo.model.migration.RangeChecksum;
  */
 public class ChecksumRangeExecutor implements Iterator<DestinationJob> {
 
-	AsynchronousJobExecutor asynchronousJobExecutor;
-	BackupJobExecutor backupJobExecutor;
-	Long batchSize;
-	MigrationType type;
-	Long minimumId;
-	Long maximumId;
-	String salt;
-	Iterator<DestinationJob> lastBackupJobs;
-	Iterator<RangeChecksum> mismatchedRanges;
+	private final AsynchronousJobExecutor asynchronousJobExecutor;
+	private BackupJobExecutor backupJobExecutor;
+	private Long batchSize;
+	private TypeToMigrateMetadata metadata;
+	private String salt;
+	private Iterator<DestinationJob> lastBackupJobs;
+	private Iterator<RangeChecksum> mismatchedRanges;
 
 	/**
 	 * No work is done in the constructor of this object. Checksums will not be
@@ -49,14 +48,12 @@ public class ChecksumRangeExecutor implements Iterator<DestinationJob> {
 	 * @param salt
 	 */
 	public ChecksumRangeExecutor(AsynchronousJobExecutor asynchronousJobExecutor, BackupJobExecutor backupJobExecutor,
-			Long batchSize, MigrationType type, Long minimumId, Long maximumId, String salt) {
+			Long batchSize, TypeToMigrateMetadata metadata, String salt) {
 		super();
 		this.asynchronousJobExecutor = asynchronousJobExecutor;
 		this.backupJobExecutor = backupJobExecutor;
 		this.batchSize = batchSize;
-		this.type = type;
-		this.minimumId = minimumId;
-		this.maximumId = maximumId;
+		this.metadata = metadata;
 		this.salt = salt;
 		// start with an empty iterator.
 		lastBackupJobs = new LinkedList<DestinationJob>().iterator();
@@ -83,7 +80,9 @@ public class ChecksumRangeExecutor implements Iterator<DestinationJob> {
 			// Fix for PLFM-6551, the bin numbers need to drive the backup range.
 			long binStart = misMatchRange.getBinNumber()*batchSize;
 			long binEnd = binStart+batchSize-1;
-			lastBackupJobs = backupJobExecutor.executeBackupJob(type, binStart, binEnd);
+			// the max cannot exceed the max of max to respect the high-water-mark.
+			binEnd = Math.min(binEnd, metadata.getMaxOfMax().get());
+			lastBackupJobs = backupJobExecutor.executeBackupJob(metadata.getType(), binStart, binEnd);
 			return lastBackupJobs.hasNext();
 		}
 	}
@@ -101,12 +100,14 @@ public class ChecksumRangeExecutor implements Iterator<DestinationJob> {
 	 */
 	Iterator<RangeChecksum> findAllMismatchedRanges() {
 		List<RangeChecksum> mismatchedRangesList = new LinkedList<>();
-		if (this.minimumId != null) {
+		Optional<Long> minOfMins = metadata.getMinOfMins();
+		Optional<Long> maxOfMax = metadata.getMaxOfMax();
+		if (minOfMins.isPresent() && maxOfMax.isPresent()) {
 			BatchChecksumRequest request = new BatchChecksumRequest();
-			request.setMigrationType(this.type);
+			request.setMigrationType(metadata.getType());
 			request.setBatchSize(this.batchSize);
-			request.setMinimumId(this.minimumId);
-			request.setMaximumId(this.maximumId);
+			request.setMinimumId(minOfMins.get());
+			request.setMaximumId(maxOfMax.get());
 			request.setSalt(this.salt);
 			// get all checksums for this range from both the source and destination.
 			ResultPair<BatchChecksumResponse> results = asynchronousJobExecutor.executeSourceAndDestinationJob(request,

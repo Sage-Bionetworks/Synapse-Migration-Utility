@@ -6,7 +6,7 @@ import org.sagebionetworks.migration.async.AsynchronousJobExecutor;
 import org.sagebionetworks.migration.async.BackupJobExecutor;
 import org.sagebionetworks.migration.async.DestinationJob;
 import org.sagebionetworks.migration.config.Configuration;
-import org.sagebionetworks.repo.model.migration.MigrationType;
+import org.sagebionetworks.migration.utils.TypeToMigrateMetadata;
 
 import com.google.inject.Inject;
 
@@ -27,9 +27,9 @@ public class RangeCheksumBuilderImpl implements RangeCheksumBuilder {
 
 
 	@Override
-	public Iterator<DestinationJob> providerRangeCheck(MigrationType type, Long minimumId, Long maximumId,
+	public Iterator<DestinationJob> providerRangeCheck(TypeToMigrateMetadata metadata,
 			String salt) {
-		return new ChecksumRangeExecutor(asynchronousJobExecutor, backupJobExecutor, batchSize, type, minimumId, maximumId, salt);
+		return new ChecksumRangeExecutor(asynchronousJobExecutor, backupJobExecutor, batchSize, metadata, salt);
 	}
 
 }

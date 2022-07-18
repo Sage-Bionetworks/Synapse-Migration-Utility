@@ -1,18 +1,13 @@
 package org.sagebionetworks.migration.utils;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 
-import org.sagebionetworks.client.SynapseAdminClient;
-import org.sagebionetworks.client.exceptions.SynapseException;
 import org.sagebionetworks.repo.model.migration.MigrationType;
 import org.sagebionetworks.repo.model.migration.MigrationTypeCount;
-import org.sagebionetworks.repo.model.migration.MigrationTypeCounts;
-import org.sagebionetworks.schema.adapter.JSONObjectAdapterException;
 
 public class ToolMigrationUtils {
 
@@ -24,7 +19,7 @@ public class ToolMigrationUtils {
 	 * @param typesToMigrate
 	 * @return
 	 */
-	public static List<TypeToMigrateMetadata> buildTypeToMigrateMetadata(
+	public static List<TypeToMigrateMetadata> buildTypeToMigrateMetadata(boolean isSourceReadOnly,
 		List<MigrationTypeCount> srcCounts, List<MigrationTypeCount> destCounts,
 		List<MigrationType> typesToMigrate) {
 		if (srcCounts == null) throw new IllegalArgumentException("srcCounts cannot be null.");
@@ -33,30 +28,20 @@ public class ToolMigrationUtils {
 		
 		List<TypeToMigrateMetadata> l = new LinkedList<TypeToMigrateMetadata>();
 		for (MigrationType t: typesToMigrate) {
-			MigrationTypeCount srcMtc = findMetadata(srcCounts, t);
-			if (srcMtc == null) {
+			Optional<MigrationTypeCount> srcMtc = srcCounts.stream().filter(c-> t.equals(c.getType())).findFirst();
+			if (!srcMtc.isPresent()) {
 				throw new RuntimeException("Could not find type " + t.name() + " in source migrationTypeCounts");
 			}
-			MigrationTypeCount destMtc = findMetadata(destCounts, t);
-			if (destMtc == null) {
+			Optional<MigrationTypeCount> destMtc = destCounts.stream().filter(c-> t.equals(c.getType())).findFirst();
+			if (!destMtc.isPresent()) {
 				throw new RuntimeException("Could not find type " + t.name() + " in destination migrationTypeCounts");
 			}
-			TypeToMigrateMetadata data = new TypeToMigrateMetadata(t, srcMtc.getMinid(), srcMtc.getMaxid(), srcMtc.getCount(), destMtc.getMinid(), destMtc.getMaxid(), destMtc.getCount());
+			TypeToMigrateMetadata data = new TypeToMigrateMetadata(isSourceReadOnly, srcMtc.get(), destMtc.get());
 			l.add(data);
 		}
 		return l;
 	}
-	
-	private static MigrationTypeCount findMetadata(List<MigrationTypeCount> tCounts, MigrationType t) {
-		MigrationTypeCount tc = null;
-		for (MigrationTypeCount c: tCounts) {
-			if (c.getType().equals(t)) {
-				tc = c;
-				break;
-			}
-		}
-		return tc;
-	}
+
 	
 	public static List<MigrationTypeCountDiff> getMigrationTypeCountDiffs(List<MigrationTypeCount> srcCounts, List<MigrationTypeCount> destCounts) {
 		List<MigrationTypeCountDiff> result = new LinkedList<MigrationTypeCountDiff>();

@@ -3,7 +3,7 @@ package org.sagebionetworks.migration.async.checksum;
 import java.util.Iterator;
 
 import org.sagebionetworks.migration.async.DestinationJob;
-import org.sagebionetworks.repo.model.migration.MigrationType;
+import org.sagebionetworks.migration.utils.TypeToMigrateMetadata;
 
 public interface RangeCheksumBuilder {
 
@@ -13,11 +13,9 @@ public interface RangeCheksumBuilder {
 	 * jobs will be executed to be restored on the destination. This builder
 	 * provides an iterator over all of the resulting destination jobs.
 	 * 
-	 * @param type
-	 * @param minimumId
-	 * @param maximumId
+	 * @param metadata
 	 * @param salt
 	 * @return
 	 */
-	Iterator<DestinationJob> providerRangeCheck(MigrationType type, Long minimumId, Long maximumId, String salt);
+	Iterator<DestinationJob> providerRangeCheck(TypeToMigrateMetadata metadata, String salt);
 }

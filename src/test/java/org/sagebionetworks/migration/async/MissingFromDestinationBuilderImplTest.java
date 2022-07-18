@@ -5,11 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.Before;
@@ -20,8 +21,10 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.sagebionetworks.migration.config.Configuration;
 import org.sagebionetworks.migration.utils.TypeToMigrateMetadata;
+import org.sagebionetworks.migration.utils.TypeToMigrateMetadata.TypeToMigrateMetadataBuilder;
 import org.sagebionetworks.repo.model.daemon.BackupAliasType;
 import org.sagebionetworks.repo.model.migration.MigrationType;
+import org.sagebionetworks.repo.model.migration.MigrationTypeCount;
 
 import com.google.common.collect.Lists;
 
@@ -42,6 +45,8 @@ public class MissingFromDestinationBuilderImplTest {
 
 	ArgumentCaptor<Long> minIdCaptor = ArgumentCaptor.forClass(Long.class);
 	ArgumentCaptor<Long> maxIdCaptor = ArgumentCaptor.forClass(Long.class);
+	
+	private boolean isSourceReadOnly;
 
 	
 	@Before
@@ -64,23 +69,22 @@ public class MissingFromDestinationBuilderImplTest {
 				batchTwo.iterator()
 		);
 		builder = new MissingFromDestinationBuilderImpl(mockConfig, mockBackupJobExecutor);
+		isSourceReadOnly = false;
 	}
 	
 	@Test
 	public void testBuildDestinationJobs() {
-		TypeToMigrateMetadata one = new TypeToMigrateMetadata();
-		one.setType(MigrationType.NODE);
-		one.setSrcMinId(1L);
-		one.setSrcMaxId(9L);
-		one.setDestMinId(null);
-		one.setDestMaxId(null);
+		TypeToMigrateMetadata one = TypeToMigrateMetadata.builder(isSourceReadOnly)
+				.setSource(
+						new MigrationTypeCount().setType(MigrationType.NODE).setMinid(1L).setMaxid(99L))
+				.setDest(new MigrationTypeCount().setType(MigrationType.NODE).setMinid(null).setMaxid(null))
+				.build();
 		
-		TypeToMigrateMetadata two = new TypeToMigrateMetadata();
-		two.setType(MigrationType.ACTIVITY);
-		two.setSrcMinId(4L);
-		two.setSrcMaxId(7L);
-		two.setDestMinId(null);
-		two.setDestMaxId(null);
+		TypeToMigrateMetadata two = TypeToMigrateMetadata.builder(isSourceReadOnly)
+				.setSource(
+						new MigrationTypeCount().setType(MigrationType.ACTIVITY).setMinid(4L).setMaxid(7L))
+				.setDest(new MigrationTypeCount().setType(MigrationType.ACTIVITY).setMinid(null).setMaxid(null))
+				.build();
 		
 		List<TypeToMigrateMetadata> primaryTypes = Lists.newArrayList(one, two);
 		
@@ -112,19 +116,17 @@ public class MissingFromDestinationBuilderImplTest {
 
 	@Test
 	public void testBuildDestinationJobsWithNullMin() {
-		TypeToMigrateMetadata one = new TypeToMigrateMetadata();
-		one.setType(MigrationType.NODE);
-		one.setSrcMinId(5L);
-		one.setSrcMaxId(20L);
-		one.setDestMinId(null);
-		one.setDestMaxId(null);
+		TypeToMigrateMetadata one = TypeToMigrateMetadata.builder(isSourceReadOnly)
+				.setSource(
+						new MigrationTypeCount().setType(MigrationType.NODE).setMinid(5L).setMaxid(20L))
+				.setDest(new MigrationTypeCount().setType(MigrationType.NODE).setMinid(null).setMaxid(null))
+				.build();
 
-		TypeToMigrateMetadata two = new TypeToMigrateMetadata();
-		two.setType(MigrationType.ACTIVITY);
-		two.setSrcMinId(null);
-		two.setSrcMaxId(null);
-		two.setDestMinId(3L);
-		two.setDestMaxId(9L);
+		TypeToMigrateMetadata two = TypeToMigrateMetadata.builder(isSourceReadOnly)
+				.setSource(
+						new MigrationTypeCount().setType(MigrationType.ACTIVITY).setMinid(null).setMaxid(null))
+				.setDest(new MigrationTypeCount().setType(MigrationType.ACTIVITY).setMinid(3L).setMaxid(9L))
+				.build();
 
 		List<TypeToMigrateMetadata> primaryTypes = Lists.newArrayList(one, two);
 
@@ -151,7 +153,7 @@ public class MissingFromDestinationBuilderImplTest {
 		assertEquals("three", restoreJob.getBackupFileKey());
 		verify(mockBackupJobExecutor, times(2)).executeBackupJob(any(), minIdCaptor.capture(), maxIdCaptor.capture());
 		assertEquals(Arrays.asList(5L, 3L), minIdCaptor.getAllValues());
-		assertEquals(Arrays.asList(21L, 10L), maxIdCaptor.getAllValues());
+		assertEquals(Arrays.asList(20L, 9L), maxIdCaptor.getAllValues());
 
 		assertFalse(iterator.hasNext());
 	}

@@ -13,6 +13,17 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
 
+/**
+ * The function {@link StackSimulator#createClientWithSimulatedServices()}
+ * provides an actual {@link MigrationClient} implementation that is injected
+ * with a {@link SimulatedStack} for both the source and destination.
+ * <p>
+ * This class provides the basic configuration information to the migration
+ * client. Each configuration value can be override to change the client's
+ * behavior.
+ * </p>
+ *
+ */
 public class StackSimulator extends AbstractModule {
 
 	private int maxNumberOfThreads = 1;
@@ -32,9 +43,10 @@ public class StackSimulator extends AbstractModule {
 		this.sourceStack = sourceStack;
 		this.destinationStack = destinationStack;
 	}
-	
+
 	/**
 	 * Override the maximum batch size.
+	 * 
 	 * @param size
 	 * @return
 	 */
@@ -72,12 +84,12 @@ public class StackSimulator extends AbstractModule {
 
 			@Override
 			public SynapseConnectionInfo getSourceConnectionInfo() {
-				return null;
+				throw new UnsupportedOperationException("This should not be needed since a SynapseAdminClient is provided.");
 			}
 
 			@Override
 			public SynapseConnectionInfo getDestinationConnectionInfo() {
-				return null;
+				throw new UnsupportedOperationException("This should not be needed since a SynapseAdminClient is provided.");
 			}
 
 			@Override

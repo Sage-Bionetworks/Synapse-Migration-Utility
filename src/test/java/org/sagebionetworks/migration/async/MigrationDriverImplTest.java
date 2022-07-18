@@ -16,7 +16,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.sagebionetworks.migration.async.checksum.ChecksumDeltaBuilder;
 import org.sagebionetworks.migration.config.Configuration;
 import org.sagebionetworks.migration.utils.TypeToMigrateMetadata;
+import org.sagebionetworks.migration.utils.TypeToMigrateMetadata.TypeToMigrateMetadataBuilder;
 import org.sagebionetworks.repo.model.migration.MigrationType;
+import org.sagebionetworks.repo.model.migration.MigrationTypeCount;
 import org.sagebionetworks.util.Clock;
 
 import com.google.common.collect.Lists;
@@ -43,6 +45,8 @@ public class MigrationDriverImplTest {
 	List<DestinationJob> deltaJobs;
 
 	MigrationDriverImpl migrationDriver;
+	
+	private boolean isSourceReadOnly;
 
 	@Before
 	public void before() {
@@ -52,14 +56,11 @@ public class MigrationDriverImplTest {
 		missingJobs = Lists.newArrayList(jobOne, jobTwo);
 		deltaJobs = Lists.newArrayList(jobThree);
 
-		TypeToMigrateMetadata toMigrate = new TypeToMigrateMetadata();
-		toMigrate.setType(MigrationType.NODE);
-		toMigrate.setSrcMinId(1L);
-		toMigrate.setSrcMaxId(99L);
-		toMigrate.setSrcCount(98L);
-		toMigrate.setDestMinId(1L);
-		toMigrate.setDestMaxId(4L);
-		toMigrate.setDestCount(3L);
+		TypeToMigrateMetadata toMigrate = TypeToMigrateMetadata.builder(isSourceReadOnly)
+				.setSource(
+						new MigrationTypeCount().setType(MigrationType.NODE).setMinid(1L).setMaxid(99L).setCount(98L))
+				.setDest(new MigrationTypeCount().setType(MigrationType.NODE).setMinid(1L).setMaxid(4L).setCount(3L))
+				.build();
 		primaryTypes = Lists.newArrayList(toMigrate);
 
 		when(mockMissingFromDestinationBuilder.buildDestinationJobs(primaryTypes)).thenReturn(missingJobs.iterator());

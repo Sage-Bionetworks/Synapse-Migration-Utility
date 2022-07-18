@@ -1,15 +1,17 @@
 package org.sagebionetworks.migration.simulation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.sagebionetworks.repo.model.migration.MigrationType.CHANGE;
+import static org.sagebionetworks.repo.model.migration.MigrationType.PRINCIPAL;
 
+import java.util.Collections;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.sagebionetworks.migration.MigrationClient;
-import static org.sagebionetworks.repo.model.migration.MigrationType.*;
 import org.sagebionetworks.repo.model.migration.MigrationTypeCount;
 import org.sagebionetworks.repo.model.table.Row;
 
@@ -26,7 +28,27 @@ public class SimulatedMigrationIntegrationTest {
 		SimulatedStack destinationStack = new SimulatedStack(
 				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(12L).setMaxid(25L),
 						new MigrationTypeCount().setType(CHANGE).setMinid(1L).setMaxid(50L)));
-		StackSimulator simulator = new StackSimulator(sourceStack, destinationStack);
+		StackSimulator simulator = new StackSimulator(sourceStack, destinationStack).withMaximumBackupBatchSize(50);
+		MigrationClient client = simulator.createClientWithSimulatedServices();
+		// call under test
+		client.migrate();
+
+		// the two stacks should be synchronized.
+		assertEquals(sourceStack.getRowsOfType(PRINCIPAL), destinationStack.getRowsOfType(PRINCIPAL));
+		assertEquals(sourceStack.getRowsOfType(CHANGE), destinationStack.getRowsOfType(CHANGE));
+	}
+	
+	@Test
+	public void tesMigrationWithEmptyDestination() {
+		// source
+		SimulatedStack sourceStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(12L).setMaxid(42L),
+						new MigrationTypeCount().setType(CHANGE).setMinid(1L).setMaxid(101L)));
+		// destination
+		SimulatedStack destinationStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setCount(0L),
+						new MigrationTypeCount().setType(CHANGE).setCount(0L)));
+		StackSimulator simulator = new StackSimulator(sourceStack, destinationStack).withMaximumBackupBatchSize(50);
 		MigrationClient client = simulator.createClientWithSimulatedServices();
 		// call under test
 		client.migrate();
@@ -42,7 +64,6 @@ public class SimulatedMigrationIntegrationTest {
 	 * each type must be captured at the beginning of migration and not exceeded
 	 * when executing any backup job.
 	 */
-	@Ignore // See: https://sagebionetworks.jira.com/browse/PLFM-7384
 	@Test
 	public void tesMigrationWithHighWaterMark() {
 
@@ -104,6 +125,105 @@ public class SimulatedMigrationIntegrationTest {
 		// call under test
 		client.migrate();
 		
+		// the two stacks should be synchronized.
+		assertEquals(sourceStack.getRowsOfType(PRINCIPAL), destinationStack.getRowsOfType(PRINCIPAL));
+	}
+	
+	@Test
+	public void testMigrationWithTypeRemovedFromDestionation() {
+		// source
+		SimulatedStack sourceStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(2L).setMaxid(4L),
+						new MigrationTypeCount().setType(CHANGE).setMinid(1L).setMaxid(3L)));
+		// destination
+		SimulatedStack destinationStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(2L).setMaxid(4L)));
+		
+		StackSimulator simulator = new StackSimulator(sourceStack, destinationStack);
+		MigrationClient client = simulator.createClientWithSimulatedServices();
+		// call under test
+		client.migrate();
+
+		// the two stacks should be synchronized.
+		assertEquals(sourceStack.getRowsOfType(PRINCIPAL), destinationStack.getRowsOfType(PRINCIPAL));
+		assertEquals(null, destinationStack.getRowsOfType(CHANGE));
+	}
+	
+	@Test
+	public void testMigrationWithTypeAddedToDestination() {
+		// source
+		SimulatedStack sourceStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(2L).setMaxid(4L)));
+		// destination
+		SimulatedStack destinationStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(2L).setMaxid(4L),
+						new MigrationTypeCount().setType(CHANGE).setMinid(1L).setMaxid(3L)));
+		
+		StackSimulator simulator = new StackSimulator(sourceStack, destinationStack);
+		MigrationClient client = simulator.createClientWithSimulatedServices();
+		// call under test
+		client.migrate();
+
+		// the two stacks should be synchronized.
+		assertEquals(sourceStack.getRowsOfType(PRINCIPAL), destinationStack.getRowsOfType(PRINCIPAL));
+		// should remain unchanged since it does not exist in the source.
+		assertNotNull(destinationStack.getRowsOfType(CHANGE));
+		assertEquals(3L, destinationStack.getRowsOfType(CHANGE).size());
+	}
+	
+	/**
+	 * For a new feature, new table can exist in both the source and destination but is only used in destination.
+	 * For such a case migration should still clear the table in the destination.
+	 */
+	@Test
+	public void testMigrationWithNewFeature() {
+		// source
+		SimulatedStack sourceStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setCount(0L)));
+		// destination
+		SimulatedStack destinationStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(2L).setMaxid(4L)));
+		StackSimulator simulator = new StackSimulator(sourceStack, destinationStack);
+		MigrationClient client = simulator.createClientWithSimulatedServices();
+		// call under test
+		client.migrate();
+
+		// the two stacks should be synchronized.
+		assertEquals(Collections.emptyList(), destinationStack.getRowsOfType(PRINCIPAL));
+	}
+	
+	@Test
+	public void tesMigrationWithSourceBelowAndAboveDestination() {
+		// source
+		SimulatedStack sourceStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(1L).setMaxid(42L)));
+		// destination
+		SimulatedStack destinationStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(15L).setMaxid(25L)));
+		
+		StackSimulator simulator = new StackSimulator(sourceStack, destinationStack).withMaximumBackupBatchSize(50);
+		MigrationClient client = simulator.createClientWithSimulatedServices();
+		// call under test
+		client.migrate();
+
+		// the two stacks should be synchronized.
+		assertEquals(sourceStack.getRowsOfType(PRINCIPAL), destinationStack.getRowsOfType(PRINCIPAL));
+	}
+	
+	@Test
+	public void tesMigrationWithDestinationBelowAndAboveSource() {
+		// source
+		SimulatedStack sourceStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(15L).setMaxid(25L)));
+		// destination
+		SimulatedStack destinationStack = new SimulatedStack(
+				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(1L).setMaxid(42L)));
+		
+		StackSimulator simulator = new StackSimulator(sourceStack, destinationStack).withMaximumBackupBatchSize(50);
+		MigrationClient client = simulator.createClientWithSimulatedServices();
+		// call under test
+		client.migrate();
+
 		// the two stacks should be synchronized.
 		assertEquals(sourceStack.getRowsOfType(PRINCIPAL), destinationStack.getRowsOfType(PRINCIPAL));
 	}

@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import org.sagebionetworks.migration.config.Configuration;
 import org.sagebionetworks.migration.utils.TypeToMigrateMetadata;
 import org.sagebionetworks.repo.model.migration.MigrationType;
-import org.sagebionetworks.util.ValidateArgument;
 
 import com.google.common.collect.Iterators;
 
@@ -42,7 +41,6 @@ public class MissingFromDestinationIterator implements Iterator<DestinationJob> 
 		// Destination values are null when the destination is empty
 		long desMinId = (typeToMigrate.getDestMinId() != null) ? typeToMigrate.getDestMinId() : 0L;
 		long desMaxId = (typeToMigrate.getDestMaxId() != null) ? typeToMigrate.getDestMaxId() : 0L;
-		long desCount = (typeToMigrate.getDestCount() != null) ? typeToMigrate.getDestCount() : 0L;
 
 		// If the source is empty we need to delete everything from the destination
 		if (typeToMigrate.getSrcMinId() == null) {
@@ -73,7 +71,7 @@ public class MissingFromDestinationIterator implements Iterator<DestinationJob> 
 			if (maxCommonId <= minCommonId) {
 				// no rows common between the source and destination so a full backup of the source is required.
 				long minimumId = srcMinId;
-				long maximumId = absoluteMaxId + 1;
+				long maximumId = absoluteMaxId;
 				Iterator<DestinationJob> iterator = backupJobExecutor.executeBackupJob(migrationType, minimumId,
 						maximumId);
 				jobIterator = Iterators.concat(jobIterator, iterator);
@@ -81,7 +79,7 @@ public class MissingFromDestinationIterator implements Iterator<DestinationJob> 
 				if (absoluteMinId < minCommonId) {
 					// backup the lower range outside of the common box.
 					long minimumId = absoluteMinId;
-					long maximumId = minCommonId + 1;
+					long maximumId = minCommonId;
 					Iterator<DestinationJob> iterator = backupJobExecutor.executeBackupJob(migrationType, minimumId,
 							maximumId);
 					jobIterator = Iterators.concat(jobIterator, iterator);
@@ -89,13 +87,12 @@ public class MissingFromDestinationIterator implements Iterator<DestinationJob> 
 				if (absoluteMaxId > maxCommonId) {
 					// backup the upper range outside of the common box.
 					long minimumId = maxCommonId;
-					long maximumId = absoluteMaxId + 1;
+					long maximumId = absoluteMaxId;
 					Iterator<DestinationJob> iterator = backupJobExecutor.executeBackupJob(migrationType, minimumId,
 							maximumId);
 					jobIterator = Iterators.concat(jobIterator, iterator);
 				}
 			}
-
 		}
 		return jobIterator.hasNext();
 	}
