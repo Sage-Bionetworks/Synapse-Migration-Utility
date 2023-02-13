@@ -20,10 +20,6 @@ import com.google.inject.Inject;
 public class MigrationConfigurationImpl implements Configuration {
 
 	static final String KEY_REMAIN_READ_ONLY_MODE = "org.sagebionetworks.remain.read.only.mode";
-	static final String KEY_SOURCE_REPOSITORY_ENDPOINT = "org.sagebionetworks.source.repository.endpoint";
-	static final String KEY_SOURCE_AUTHENTICATION_ENDPOINT = "org.sagebionetworks.source.authentication.endpoint";
-	static final String KEY_DESTINATION_REPOSITORY_ENDPOINT = "org.sagebionetworks.destination.repository.endpoint";
-	static final String KEY_DESTINATION_AUTHENTICATION_ENDPOINT = "org.sagebionetworks.destination.authentication.endpoint";
 	static final String KEY_SERVICE_KEY = "org.sagebionetworks.service.key";
 	static final String KEY_SOURCE_SERVICE_SECRET = "org.sagebionetworks.service.secret.source";
 	static final String KEY_DESTINATION_SERVICE_SECRET = "org.sagebionetworks.service.secret.destination";
@@ -34,14 +30,51 @@ public class MigrationConfigurationImpl implements Configuration {
 	static final String KEY_BACKUP_ALIAS_TYPE = "org.sagebionetworks.backup.alias.type";
 	static final String KEY_DELAY_BEFORE_START_MS = "org.sagebionetworks.delay.before.start.ms";
 	static final String KEY_INCLUDE_FULL_TABLE_CHECKSUM = "org.sagebionetworks.include.full.table.checksum";
-	
+	static final String KEY_STACK = "org.sagebionetworks.stack";
+	static final String REPO_ENDPOINT_FORMAT = "repo-%s.%s.sagebase.org/%s/v1";
+
+	enum StackType {
+		PROD ("prod"),
+		STAGING ("staging");
+
+		private final String label;
+
+		private StackType(String s) {
+			label = s;
+		}
+
+		public String toString() {
+			return this.label;
+		}
+
+	}
+
+	enum EndpointType {
+		REPO ("repo"),
+		AUTH ("auth");
+
+		private final String label;
+
+		private EndpointType(String s) {
+			label = s;
+		}
+
+		public String toString() {
+			return this.label;
+		}
+	}
+
 	Logger logger;
 	SystemPropertiesProvider propProvider;
 	FileProvider fileProvider;
 	AWSSecretsManager secretManager;
 	
 	Properties systemProperties;
-	
+
+	private String buildRepoEndpoint(String stack, StackType stackType, EndpointType endpointType) {
+		return String.format(REPO_ENDPOINT_FORMAT, stackType.toString(), stack, endpointType.toString());
+	}
+
 	@Inject
 	public MigrationConfigurationImpl(LoggerFactory loggerFactory, SystemPropertiesProvider propProvider, FileProvider fileProvider, AWSSecretsManager secretManager) throws IOException {
 		this.logger = loggerFactory.getLogger(MigrationConfigurationImpl.class);
@@ -51,12 +84,12 @@ public class MigrationConfigurationImpl implements Configuration {
 		// load the the System properties.
 		systemProperties = propProvider.getSystemProperties();
 	}
-	
+
 	@Override
 	public SynapseConnectionInfo getSourceConnectionInfo(){
 		return new SynapseConnectionInfo(
-					getProperty(KEY_SOURCE_AUTHENTICATION_ENDPOINT),
-					getProperty(KEY_SOURCE_REPOSITORY_ENDPOINT),
+					buildRepoEndpoint(getProperty(KEY_STACK), StackType.PROD,  EndpointType.AUTH),
+					buildRepoEndpoint(getProperty(KEY_STACK), StackType.PROD,  EndpointType.REPO),
 					getProperty(KEY_SERVICE_KEY),
 					getSecret(KEY_SOURCE_SERVICE_SECRET)
 				);
@@ -65,8 +98,8 @@ public class MigrationConfigurationImpl implements Configuration {
 	@Override
 	public SynapseConnectionInfo getDestinationConnectionInfo(){
 		return new SynapseConnectionInfo(
-					getProperty(KEY_DESTINATION_AUTHENTICATION_ENDPOINT),
-					getProperty(KEY_DESTINATION_REPOSITORY_ENDPOINT),
+					buildRepoEndpoint(getProperty(KEY_STACK), StackType.STAGING,  EndpointType.AUTH),
+					buildRepoEndpoint(getProperty(KEY_STACK), StackType.STAGING,  EndpointType.REPO),
 					getProperty(KEY_SERVICE_KEY),
 					getSecret(KEY_DESTINATION_SERVICE_SECRET)
 				);
