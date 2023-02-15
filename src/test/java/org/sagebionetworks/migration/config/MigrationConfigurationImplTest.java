@@ -86,7 +86,16 @@ public class MigrationConfigurationImplTest {
 
 		config = new MigrationConfigurationImpl(mockLoggerFactory, mockPropertyProvider, mockFileProvider, mockSecretManager);
 	}
-	
+
+	private void setupMockSecretManager() {
+		when(mockSecretManager
+				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_SOURCE_SERVICE_SECRET)))
+				.thenReturn(new GetSecretValueResult().withSecretString(sourceServiceSecret));
+		when(mockSecretManager
+				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_DESTINATION_SERVICE_SECRET)))
+				.thenReturn(new GetSecretValueResult().withSecretString(destinationServiceSecret));
+	}
+
 	@Test
 	public void testGetProperty() {
 		// call under test
@@ -104,17 +113,13 @@ public class MigrationConfigurationImplTest {
 	@Test
 	public void testLogConfiguration() {
 		props.put(MigrationConfigurationImpl.KEY_STACK, "dev");
-		when(mockSecretManager
-				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_SOURCE_SERVICE_SECRET)))
-				.thenReturn(new GetSecretValueResult().withSecretString(sourceServiceSecret));
-		when(mockSecretManager
-				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_DESTINATION_SERVICE_SECRET)))
-				.thenReturn(new GetSecretValueResult().withSecretString(destinationServiceSecret));
+		setupMockSecretManager();
 		// call under test
 		config.logConfiguration();
 		verify(mockLogger, times(8)).info(anyString());
 	}
-	
+
+
 	@Test
 	public void testRemainInReadOnlyAfterMigrationDeafult() {
 		// by default should return false.
@@ -130,12 +135,7 @@ public class MigrationConfigurationImplTest {
 
 	@Test
 	public void testGetConnectionInfoProd() {
-		when(mockSecretManager
-				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_SOURCE_SERVICE_SECRET)))
-				.thenReturn(new GetSecretValueResult().withSecretString(sourceServiceSecret));
-		when(mockSecretManager
-				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_DESTINATION_SERVICE_SECRET)))
-				.thenReturn(new GetSecretValueResult().withSecretString(destinationServiceSecret));
+		setupMockSecretManager();
 		props.put(MigrationConfigurationImpl.KEY_STACK, "prod");
 		// source
 		SynapseConnectionInfo connInfo = config.getSourceConnectionInfo();
@@ -156,12 +156,7 @@ public class MigrationConfigurationImplTest {
 	@Test
 	public void testGetConnectionInfoDev() {
 		props.put(MigrationConfigurationImpl.KEY_STACK, "dev");
-		when(mockSecretManager
-				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_SOURCE_SERVICE_SECRET)))
-				.thenReturn(new GetSecretValueResult().withSecretString(sourceServiceSecret));
-		when(mockSecretManager
-				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_DESTINATION_SERVICE_SECRET)))
-				.thenReturn(new GetSecretValueResult().withSecretString(destinationServiceSecret));
+		setupMockSecretManager();
 		SynapseConnectionInfo connInfo = config.getSourceConnectionInfo();
 		assertNotNull(connInfo);
 		assertEquals("repo-prod.dev.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());

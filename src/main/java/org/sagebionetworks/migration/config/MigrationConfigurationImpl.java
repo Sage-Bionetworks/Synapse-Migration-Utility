@@ -46,7 +46,6 @@ public class MigrationConfigurationImpl implements Configuration {
 		public String toString() {
 			return this.label;
 		}
-
 	}
 
 	enum EndpointType {
