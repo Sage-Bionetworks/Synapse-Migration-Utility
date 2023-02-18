@@ -52,10 +52,6 @@ public class MigrationConfigurationImplTest {
 	
 	String sampleKey;
 	String sampleValue;
-	String sourceAuthEndpoint;
-	String sourceRepoEndpoint;
-	String destinationAuthEndpoint;
-	String destinationRepoEndPoint;
 	String serviceKey;
 	String sourceServiceSecret;
 	String destinationServiceSecret;
@@ -66,20 +62,12 @@ public class MigrationConfigurationImplTest {
 		
 		sampleKey = "sampleKey";
 		sampleValue = "sampleValue";
-		sourceAuthEndpoint ="sourceAuthEndpoint";
-		sourceRepoEndpoint = "souceRepoEndpoint";
-		destinationAuthEndpoint ="destinationAuthEndpoint";
-		destinationRepoEndPoint = "destinationRepoEndpoint";
 		serviceKey = "migration";
 		sourceServiceSecret = "sourceKeySecret";
 		destinationServiceSecret = "destinationKeySecret";
-		
+
 		props = new Properties();
 		props.put(sampleKey, sampleValue);
-		props.put(MigrationConfigurationImpl.KEY_SOURCE_AUTHENTICATION_ENDPOINT, sourceAuthEndpoint);
-		props.put(MigrationConfigurationImpl.KEY_SOURCE_REPOSITORY_ENDPOINT, sourceRepoEndpoint);
-		props.put(MigrationConfigurationImpl.KEY_DESTINATION_AUTHENTICATION_ENDPOINT, destinationAuthEndpoint);
-		props.put(MigrationConfigurationImpl.KEY_DESTINATION_REPOSITORY_ENDPOINT, destinationRepoEndPoint);
 		props.put(MigrationConfigurationImpl.KEY_SERVICE_KEY, serviceKey);
 		props.put(MigrationConfigurationImpl.KEY_MAX_BACKUP_BATCHSIZE, "2");
 		props.put(MigrationConfigurationImpl.KEY_MAX_RETRIES, "3");
@@ -95,17 +83,19 @@ public class MigrationConfigurationImplTest {
 		when(mockFileProvider.createInputStream(any(File.class))).thenReturn(mockInputStream);
 		when(mockFile.exists()).thenReturn(true);
 		when(mockLoggerFactory.getLogger(any())).thenReturn(mockLogger);
-		
-		when(mockSecretManager
-				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_SOURCE_SERVICE_SECRET)))
-						.thenReturn(new GetSecretValueResult().withSecretString(sourceServiceSecret));
-		when(mockSecretManager
-				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_DESTINATION_SERVICE_SECRET)))
-						.thenReturn(new GetSecretValueResult().withSecretString(destinationServiceSecret));
-		
+
 		config = new MigrationConfigurationImpl(mockLoggerFactory, mockPropertyProvider, mockFileProvider, mockSecretManager);
 	}
-	
+
+	private void setupMockSecretManager() {
+		when(mockSecretManager
+				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_SOURCE_SERVICE_SECRET)))
+				.thenReturn(new GetSecretValueResult().withSecretString(sourceServiceSecret));
+		when(mockSecretManager
+				.getSecretValue(new GetSecretValueRequest().withSecretId(MigrationConfigurationImpl.KEY_DESTINATION_SERVICE_SECRET)))
+				.thenReturn(new GetSecretValueResult().withSecretString(destinationServiceSecret));
+	}
+
 	@Test
 	public void testGetProperty() {
 		// call under test
@@ -119,37 +109,17 @@ public class MigrationConfigurationImplTest {
 		// call under test
 		config.getProperty("doesNotExist");
 	}
-	
-	@Test
-	public void testGetSourceConnectionInfo() {
-		// call under test
-		SynapseConnectionInfo info = config.getSourceConnectionInfo();
-		assertNotNull(info);
-		assertEquals(sourceAuthEndpoint, info.getAuthenticationEndPoint());
-		assertEquals(sourceRepoEndpoint, info.getRepositoryEndPoint());
-		assertEquals(serviceKey, info.getServiceKey());
-		assertEquals(sourceServiceSecret, info.getServiceSecret());
-	}
-	
-	
-	@Test
-	public void testGetDestinationConnectionInfo() {
-		// call under test
-		SynapseConnectionInfo info = config.getDestinationConnectionInfo();
-		assertNotNull(info);
-		assertEquals(destinationAuthEndpoint, info.getAuthenticationEndPoint());
-		assertEquals(destinationRepoEndPoint, info.getRepositoryEndPoint());
-		assertEquals(serviceKey, info.getServiceKey());
-		assertEquals(destinationServiceSecret, info.getServiceSecret());
-	}
-	
+
 	@Test
 	public void testLogConfiguration() {
+		props.put(MigrationConfigurationImpl.KEY_STACK, "dev");
+		setupMockSecretManager();
 		// call under test
 		config.logConfiguration();
 		verify(mockLogger, times(8)).info(anyString());
 	}
-	
+
+
 	@Test
 	public void testRemainInReadOnlyAfterMigrationDeafult() {
 		// by default should return false.
@@ -162,4 +132,44 @@ public class MigrationConfigurationImplTest {
 		props.put(MigrationConfigurationImpl.KEY_REMAIN_READ_ONLY_MODE, "true");
 		assertTrue(config.remainInReadOnlyAfterMigration());
 	}
+
+	@Test
+	public void testGetConnectionInfoProd() {
+		setupMockSecretManager();
+		props.put(MigrationConfigurationImpl.KEY_STACK, "prod");
+		// source
+		SynapseConnectionInfo connInfo = config.getSourceConnectionInfo();
+		assertNotNull(connInfo);
+		assertEquals("repo-prod.prod.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
+		assertEquals("repo-prod.prod.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
+		assertEquals(serviceKey, connInfo.getServiceKey());
+		assertEquals(sourceServiceSecret, connInfo.getServiceSecret());
+		// destination
+		connInfo = config.getDestinationConnectionInfo();
+		assertNotNull(connInfo);
+		assertEquals("repo-staging.prod.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
+		assertEquals("repo-staging.prod.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
+		assertEquals(serviceKey, connInfo.getServiceKey());
+		assertEquals(destinationServiceSecret, connInfo.getServiceSecret());
+	}
+
+	@Test
+	public void testGetConnectionInfoDev() {
+		props.put(MigrationConfigurationImpl.KEY_STACK, "dev");
+		setupMockSecretManager();
+		SynapseConnectionInfo connInfo = config.getSourceConnectionInfo();
+		assertNotNull(connInfo);
+		assertEquals("repo-prod.dev.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
+		assertEquals("repo-prod.dev.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
+		assertEquals(serviceKey, connInfo.getServiceKey());
+		assertEquals(sourceServiceSecret, connInfo.getServiceSecret());
+		// destination
+		connInfo = config.getDestinationConnectionInfo();
+		assertNotNull(connInfo);
+		assertEquals("repo-staging.dev.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
+		assertEquals("repo-staging.dev.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
+		assertEquals(serviceKey, connInfo.getServiceKey());
+		assertEquals(destinationServiceSecret, connInfo.getServiceSecret());
+	}
+
 }
