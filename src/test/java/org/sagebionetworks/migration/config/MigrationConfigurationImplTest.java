@@ -140,15 +140,15 @@ public class MigrationConfigurationImplTest {
 		// source
 		SynapseConnectionInfo connInfo = config.getSourceConnectionInfo();
 		assertNotNull(connInfo);
-		assertEquals("repo-prod.prod.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
-		assertEquals("repo-prod.prod.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
+		assertEquals("https://repo-prod.prod.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
+		assertEquals("https://repo-prod.prod.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
 		assertEquals(serviceKey, connInfo.getServiceKey());
 		assertEquals(sourceServiceSecret, connInfo.getServiceSecret());
 		// destination
 		connInfo = config.getDestinationConnectionInfo();
 		assertNotNull(connInfo);
-		assertEquals("repo-staging.prod.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
-		assertEquals("repo-staging.prod.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
+		assertEquals("https://repo-staging.prod.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
+		assertEquals("https://repo-staging.prod.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
 		assertEquals(serviceKey, connInfo.getServiceKey());
 		assertEquals(destinationServiceSecret, connInfo.getServiceSecret());
 	}
@@ -159,15 +159,15 @@ public class MigrationConfigurationImplTest {
 		setupMockSecretManager();
 		SynapseConnectionInfo connInfo = config.getSourceConnectionInfo();
 		assertNotNull(connInfo);
-		assertEquals("repo-prod.dev.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
-		assertEquals("repo-prod.dev.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
+		assertEquals("https://repo-prod.dev.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
+		assertEquals("https://repo-prod.dev.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
 		assertEquals(serviceKey, connInfo.getServiceKey());
 		assertEquals(sourceServiceSecret, connInfo.getServiceSecret());
 		// destination
 		connInfo = config.getDestinationConnectionInfo();
 		assertNotNull(connInfo);
-		assertEquals("repo-staging.dev.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
-		assertEquals("repo-staging.dev.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
+		assertEquals("https://repo-staging.dev.sagebase.org/repo/v1", connInfo.getRepositoryEndPoint());
+		assertEquals("https://repo-staging.dev.sagebase.org/auth/v1", connInfo.getAuthenticationEndPoint());
 		assertEquals(serviceKey, connInfo.getServiceKey());
 		assertEquals(destinationServiceSecret, connInfo.getServiceSecret());
 	}

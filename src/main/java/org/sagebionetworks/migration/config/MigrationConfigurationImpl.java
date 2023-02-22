@@ -31,7 +31,7 @@ public class MigrationConfigurationImpl implements Configuration {
 	static final String KEY_DELAY_BEFORE_START_MS = "org.sagebionetworks.delay.before.start.ms";
 	static final String KEY_INCLUDE_FULL_TABLE_CHECKSUM = "org.sagebionetworks.include.full.table.checksum";
 	static final String KEY_STACK = "org.sagebionetworks.stack";
-	static final String REPO_ENDPOINT_FORMAT = "repo-%s.%s.sagebase.org/%s/v1";
+	static final String REPO_ENDPOINT_FORMAT = "https://repo-%s.%s.sagebase.org/%s/v1";
 
 	enum StackType {
 		PROD ("prod"),
