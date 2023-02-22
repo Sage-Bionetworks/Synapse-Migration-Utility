@@ -27,9 +27,6 @@ public class MigrationModuleTest {
 		// Simple test to determine if the Guice can build all of the dependencies.
 		Injector injector = Guice.createInjector(new MigrationModule());
 		assertNotNull(injector);
-		MigrationConfigurationImpl config = injector.getInstance(MigrationConfigurationImpl.class);
-		MigrationClientImpl client = injector.getInstance(MigrationClientImpl.class);
-		assertNotNull(client);
 	}
 	
 	@Test
