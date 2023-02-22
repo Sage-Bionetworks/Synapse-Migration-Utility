@@ -13,6 +13,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import org.sagebionetworks.migration.config.MigrationConfigurationImpl;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MigrationModuleTest {
@@ -22,6 +23,7 @@ public class MigrationModuleTest {
 	
 	@Test
 	public void testInjector() {
+
 		// Simple test to determine if the Guice can build all of the dependencies.
 		Injector injector = Guice.createInjector(new MigrationModule());
 		assertNotNull(injector);
