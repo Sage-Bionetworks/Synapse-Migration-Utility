@@ -9,11 +9,15 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.sagebionetworks.migration.config.MigrationConfigurationImpl.REPO_ENDPOINT_FORMAT;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
@@ -87,6 +91,14 @@ public class MigrationConfigurationImplTest {
 		config = new MigrationConfigurationImpl(mockLoggerFactory, mockPropertyProvider, mockFileProvider, mockSecretManager);
 	}
 	
+
+	@Test
+	public void testRepoEndpointFormat() throws MalformedURLException {
+		String endpoint = String.format(REPO_ENDPOINT_FORMAT, "stackType", "stack", "endpointType");
+		// This will fail if the resulting endpoint is not a valid URL
+		URL url = new URL(endpoint);
+	}
+
 	@Test
 	public void testGetProperty() {
 		// call under test
