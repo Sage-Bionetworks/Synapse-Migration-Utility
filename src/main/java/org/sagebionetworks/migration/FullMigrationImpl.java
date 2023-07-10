@@ -48,8 +48,6 @@ public class FullMigrationImpl implements FullMigration {
 		logger.info("Computing counts for migrating types...");
 		ResultPair<List<MigrationTypeCount>> countResults = typeService.getMigrationTypeCounts(allCommonTypes);
 
-		// print the counts to the log.
-		typeReporter.reportCountDifferences(countResults);
 		// Give the caller a chance to cancel before migration starts
 		typeReporter.runCountDownBeforeStart();
 
@@ -60,14 +58,6 @@ public class FullMigrationImpl implements FullMigration {
 		// run the migration process asynchronously
 		logger.info("Starting the asynchronous of all types...");
 		migrationDriver.migratePrimaryTypes(typesToMigrate);
-
-		// Gather the final counts
-		logger.info("Computing final counts...");
-		countResults = typeService.getMigrationTypeCounts(allCommonTypes);
-
-		// print the counts to the log.
-		logger.info("Final counts after migration:");
-		typeReporter.reportCountDifferences(countResults);
 
 		if (config.includeFullTableChecksums()) {
 			logger.info("Starting full table checksums...");

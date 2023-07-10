@@ -42,7 +42,6 @@ public class ToolMigrationUtils {
 		return l;
 	}
 
-	
 	public static List<MigrationTypeCountDiff> getMigrationTypeCountDiffs(List<MigrationTypeCount> srcCounts, List<MigrationTypeCount> destCounts) {
 		List<MigrationTypeCountDiff> result = new LinkedList<MigrationTypeCountDiff>();
 		Map<MigrationType, Long> mapSrcCounts = new HashMap<MigrationType, Long>();
