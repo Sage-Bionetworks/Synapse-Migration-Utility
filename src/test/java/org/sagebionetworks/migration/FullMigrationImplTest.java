@@ -112,10 +112,7 @@ public class FullMigrationImplTest {
 		// called at start and end.
 		verify(mockTypeService).getMigrationTypeCounts(allCommonTypes);
 		verify(mockTypeReporter).runCountDownBeforeStart();
-		// start
-		verify(mockTypeReporter, never()).reportCountDifferences(countResultsOne);
-		// end
-		verify(mockTypeReporter, never()).reportCountDifferences(countResultsTwo);
+		verify(mockTypeReporter, never()).reportCountDifferences(any());
 		verify(mockTypeService, times(allCommonTypes.size())).getFullTableChecksums(any(MigrationType.class));
 		verify(mockTypeReporter, times(allCommonTypes.size())).reportChecksums(any(MigrationType.class), eq(checksumResutls));
 	}
