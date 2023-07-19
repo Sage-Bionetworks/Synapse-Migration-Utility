@@ -136,7 +136,7 @@ public class SimulatedStack {
 		typeToRows = new LinkedHashMap<>(stackData.size());
 		for (MigrationTypeCount typeCount : stackData) {
 			List<Row> rowIds = null;
-			if (Long.valueOf(0).equals(typeCount.getCount())) {
+			if (typeCount.getMaxid() == null) {
 				rowIds = new ArrayList<>();
 			} else {
 				rowIds = new ArrayList<>((int) (typeCount.getMaxid() - typeCount.getMinid()));

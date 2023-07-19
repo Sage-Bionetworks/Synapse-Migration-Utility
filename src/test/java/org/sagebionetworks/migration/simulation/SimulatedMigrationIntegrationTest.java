@@ -177,9 +177,9 @@ public class SimulatedMigrationIntegrationTest {
 	 */
 	@Test
 	public void testMigrationWithNewFeature() {
-		// source
+		// source (count/min/max==null)
 		SimulatedStack sourceStack = new SimulatedStack(
-				List.of(new MigrationTypeCount().setType(PRINCIPAL).setCount(0L)));
+				List.of(new MigrationTypeCount().setType(PRINCIPAL)));
 		// destination
 		SimulatedStack destinationStack = new SimulatedStack(
 				List.of(new MigrationTypeCount().setType(PRINCIPAL).setMinid(2L).setMaxid(4L)));

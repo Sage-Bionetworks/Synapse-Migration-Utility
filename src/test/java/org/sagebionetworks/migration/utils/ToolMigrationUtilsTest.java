@@ -14,7 +14,6 @@ import org.junit.Test;
 import org.sagebionetworks.repo.model.migration.MigrationType;
 import org.sagebionetworks.repo.model.migration.MigrationTypeCount;
 import org.sagebionetworks.repo.model.migration.MigrationTypeList;
-import org.sagebionetworks.migration.utils.TypeToMigrateMetadata.TypeToMigrateMetadataBuilder;
 
 public class ToolMigrationUtilsTest {
 	
@@ -124,7 +123,7 @@ public class ToolMigrationUtilsTest {
 		List<TypeToMigrateMetadata> l = ToolMigrationUtils.buildTypeToMigrateMetadata(isSourceReadOnly, srcTypeCounts, destTypeCounts, typesToMigrate.getList());
 		assertEquals(expectedMetadata, l);
 	}
-	
+
 	@Test
 	public void testMigrationOutcomeGetDelta() {
 		MigrationTypeCountDiff outcome = new MigrationTypeCountDiff(MigrationType.ACCESS_APPROVAL, null, null);
@@ -142,32 +141,57 @@ public class ToolMigrationUtilsTest {
 		assertNotNull(delta);
 		assertEquals(20L-10L, delta.longValue());
 	}
-	
+
 	@Test
-	public void testGetMigrationOutcomesAllSourcesExist() {
+	public void testGetMigrationMetaDiffAllSourcesExist() {
 		List<MigrationTypeCount> srcCounts = generateMigrationTypeCounts();
 		List<MigrationTypeCount> destCounts = generateMigrationTypeCounts();
-		
-		List<MigrationTypeCountDiff> expectedOutcomes = new LinkedList<MigrationTypeCountDiff>();
+
+		List<MigrationTypeMetaDiff> expectedOutcomes = new LinkedList<MigrationTypeMetaDiff>();
 		int idx = 0;
 		for (MigrationTypeCount tc: destCounts) {
-			MigrationTypeCountDiff outcome = new MigrationTypeCountDiff(tc.getType(), srcCounts.get(idx++).getCount(), tc.getCount());
+			MigrationTypeMetaDiff outcome = new MigrationTypeMetaDiff(tc.getType(), new MetaReport(srcCounts.get(idx).getMinid(), srcCounts.get(idx).getMaxid()), new MetaReport(tc.getMinid(), tc.getMaxid()));
+			idx += 1;
 			expectedOutcomes.add(outcome);
 		}
-		
-		List<MigrationTypeCountDiff> outcomes = ToolMigrationUtils.getMigrationTypeCountDiffs(srcCounts, destCounts);
-		
+
+		List<MigrationTypeMetaDiff> outcomes = ToolMigrationUtils.getMigrationTypeMetaDiffs(srcCounts, destCounts);
+
 		assertNotNull(outcomes);
 		assertEquals(expectedOutcomes.size(), outcomes.size());
+
 	}
-	
+
+	@Test
+	public void testGetMigrationMetaDiffOneSourceMissing() {
+		List<MigrationTypeCount> srcCounts = generateMigrationTypeCounts();
+		List<MigrationTypeCount> destCounts = generateMigrationTypeCounts();
+
+		List<MigrationTypeMetaDiff> expectedOutcomes = new LinkedList<MigrationTypeMetaDiff>();
+		int idx = 0;
+		for (MigrationTypeCount tc: destCounts) {
+			MigrationTypeMetaDiff outcome = new MigrationTypeMetaDiff(tc.getType(), new MetaReport(srcCounts.get(idx).getMinid(), tc.getMinid()), new MetaReport(srcCounts.get(idx).getMaxid(), tc.getMaxid()));
+			if (idx != 0) {
+				expectedOutcomes.add(outcome);
+			}
+			idx += 1;
+		}
+		srcCounts.remove(0);
+
+		// call under test
+		List<MigrationTypeMetaDiff> outcomes = ToolMigrationUtils.getMigrationTypeMetaDiffs(srcCounts, destCounts);
+
+		assertNotNull(outcomes);
+		assertEquals(expectedOutcomes.size(), outcomes.size());
+
+	}
 	private List<MigrationTypeCount> generateMigrationTypeCounts() {
 		Random r = new Random();
 		List<MigrationTypeCount> l = new LinkedList<MigrationTypeCount>();
 		for (MigrationType t: MigrationType.values()) {
 			MigrationTypeCount tc = new MigrationTypeCount();
 			tc.setType(t);
-			tc.setCount(Math.abs(r.nextLong()));
+			tc.setCount(null);
 			tc.setMinid(Math.abs(r.nextLong()));
 			tc.setMaxid(Math.abs(r.nextLong()));
 			l.add(tc);

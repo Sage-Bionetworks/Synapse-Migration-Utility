@@ -42,17 +42,17 @@ public class ToolMigrationUtils {
 		return l;
 	}
 
-	public static List<MigrationTypeCountDiff> getMigrationTypeCountDiffs(List<MigrationTypeCount> srcCounts, List<MigrationTypeCount> destCounts) {
-		List<MigrationTypeCountDiff> result = new LinkedList<MigrationTypeCountDiff>();
-		Map<MigrationType, Long> mapSrcCounts = new HashMap<MigrationType, Long>();
-		for (MigrationTypeCount sMtc: srcCounts) {
-			mapSrcCounts.put(sMtc.getType(), sMtc.getCount());
-		}
+	public static List<MigrationTypeMetaDiff> getMigrationTypeMetaDiffs(List<MigrationTypeCount> srcCounts, List<MigrationTypeCount> destCounts) {
+		List<MigrationTypeMetaDiff> result = new LinkedList<MigrationTypeMetaDiff>();
 		// All migration types of source should be at destination
 		// Note: unused src migration types are covered, they're not in destination results
-		for (MigrationTypeCount mtc: destCounts) {
-			MigrationTypeCountDiff outcome = 	new MigrationTypeCountDiff(mtc.getType(), (mapSrcCounts.containsKey(mtc.getType()) ? mapSrcCounts.get(mtc.getType()) : null), mtc.getCount());
-			result.add(outcome);
+		for (MigrationTypeCount destMtc: destCounts) {
+			MigrationTypeMetaDiff metaDiff = null;
+			Optional<MigrationTypeCount> found = srcCounts.stream().filter(mtc->mtc.getType().equals(destMtc.getType())).findFirst();
+			if (found.isPresent()) {
+				metaDiff = new MigrationTypeMetaDiff(found.get().getType(), new MetaReport(found.get().getMinid(), destMtc.getMinid()), new MetaReport(found.get().getMaxid(), destMtc.getMaxid()));
+				result.add(metaDiff);
+			}
 		}
 		return result;
 	}

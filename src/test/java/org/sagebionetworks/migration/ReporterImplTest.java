@@ -70,22 +70,30 @@ public class ReporterImplTest {
 		
 		MigrationTypeCount sourceNodeCount = new MigrationTypeCount();
 		sourceNodeCount.setType(MigrationType.NODE);
-		sourceNodeCount.setCount(99L);
+		sourceNodeCount.setCount(null);
+		sourceNodeCount.setMinid(10L);
+		sourceNodeCount.setMaxid(100L);
 		
 		MigrationTypeCount sourceAclCount = new MigrationTypeCount();
 		sourceAclCount.setType(MigrationType.ACL);
-		sourceAclCount.setCount(88L);
+		sourceAclCount.setCount(null);
+		sourceAclCount.setMinid(30L);
+		sourceAclCount.setMaxid(120L);
 		
 		sourceCounts = Lists.newArrayList(sourceNodeCount, sourceAclCount);
 		
 		
 		MigrationTypeCount destNodeCount = new MigrationTypeCount();
 		destNodeCount.setType(MigrationType.NODE);
-		destNodeCount.setCount(2L);
+		destNodeCount.setCount(null);
+		destNodeCount.setMinid(80L);
+		destNodeCount.setMaxid(130L);
 		
 		MigrationTypeCount destActivity = new MigrationTypeCount();
 		destActivity.setType(MigrationType.ACTIVITY);
-		destActivity.setCount(4L);
+		destActivity.setCount(null);
+		destActivity.setMinid(90L);
+		destActivity.setMaxid(100L);
 		
 		destinationCounts = Lists.newArrayList(destNodeCount, destActivity);
 		
@@ -145,14 +153,12 @@ public class ReporterImplTest {
 	}
 	
 	@Test
-	public void testreportCountDifferences() {
-		// call under test
-		reporter.reportCountDifferences(typeCounts);
-		verify(mockLogger).info("\tNODE:\t-97\t99\t2");
-		verify(mockLogger).info("\tACTIVITY\tNA\t4");
-		verify(mockLogger, times(2)).info(anyString());
+	public void testReportMetaDifferences() {
+		reporter.reportMetaDifferences(typeCounts);
+		verify(mockLogger).info("\tNODE:\tmins:(10, 80)\tmaxes:(100, 130)");
+		verify(mockLogger).info(anyString());
 	}
-	
+
 	@Test
 	public void testFormatElapseMS() {
 		long hoursMS = 13 *60*60*1000;

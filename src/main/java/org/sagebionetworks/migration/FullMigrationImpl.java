@@ -47,6 +47,7 @@ public class FullMigrationImpl implements FullMigration {
 		// Get the counts for all types
 		logger.info("Computing counts for migrating types...");
 		ResultPair<List<MigrationTypeCount>> countResults = typeService.getMigrationTypeCounts(allCommonTypes);
+		typeReporter.reportMetaDifferences(countResults);
 
 		// Give the caller a chance to cancel before migration starts
 		typeReporter.runCountDownBeforeStart();
@@ -66,6 +67,9 @@ public class FullMigrationImpl implements FullMigration {
 				typeReporter.reportChecksums(type, checksum);
 			}
 		}
+
+		countResults = typeService.getMigrationTypeCounts(allCommonTypes);
+		typeReporter.reportMetaDifferences(countResults);
 	}
 
 }
