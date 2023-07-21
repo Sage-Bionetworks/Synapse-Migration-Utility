@@ -8,6 +8,7 @@ import org.sagebionetworks.migration.async.JobTarget;
 import org.sagebionetworks.migration.async.ResultPair;
 import org.sagebionetworks.migration.config.Configuration;
 import org.sagebionetworks.migration.utils.MigrationTypeCountDiff;
+import org.sagebionetworks.migration.utils.MigrationTypeMetaDiff;
 import org.sagebionetworks.migration.utils.ToolMigrationUtils;
 import org.sagebionetworks.repo.model.asynch.AsynchronousJobStatus;
 import org.sagebionetworks.repo.model.migration.AdminRequest;
@@ -35,24 +36,22 @@ public class ReporterImpl implements Reporter {
 	Clock clock;
 
 	@Inject
-	public ReporterImpl(Configuration configuration, LoggerFactory loggerFaactory, Clock clock) {
+	public ReporterImpl(Configuration configuration, LoggerFactory loggerFactory, Clock clock) {
 		super();
 		this.configuration = configuration;
-		this.logger = loggerFaactory.getLogger(ReporterImpl.class);
+		this.logger = loggerFactory.getLogger(ReporterImpl.class);
 		this.clock = clock;
 	}
 
 	@Override
-	public void reportCountDifferences(ResultPair<List<MigrationTypeCount>> typeCounts) {
-		List<MigrationTypeCountDiff> diffs = ToolMigrationUtils.getMigrationTypeCountDiffs(typeCounts.getSourceResult(),
+	public void reportMetaDifferences(ResultPair<List<MigrationTypeCount>> typeCounts) {
+		List<MigrationTypeMetaDiff> diffs = ToolMigrationUtils.getMigrationTypeMetaDiffs(
+				typeCounts.getSourceResult(),
 				typeCounts.getDestinationResult());
-		for (MigrationTypeCountDiff diff : diffs) {
-			// Missing at source
-			if (diff.getDelta() == null) {
-				logger.info("\t" + diff.getType().name() + "\tNA\t" + diff.getDestinationCount());
-			} else if (diff.getDelta() != 0L) {
-				logger.info("\t" + diff.getType().name() + ":\t" + diff.getDelta() + "\t" + diff.getSourceCount() + "\t"
-						+ diff.getDestinationCount());
+		for (MigrationTypeMetaDiff diff : diffs) {
+			if (!diff.getMinReport().sourceEqualsDest() ||
+					!diff.getMaxReport().sourceEqualsDest()) {
+				logger.info(String.format("\t%s:\tmins:%s\tmaxes:%s", diff.getMigrationType().name(), diff.getMinReport().toString(), diff.getMaxReport().toString()));
 			}
 		}
 	}

@@ -12,11 +12,11 @@ import org.sagebionetworks.repo.model.migration.MigrationTypeCount;
 public interface Reporter {
 
 	/**
-	 * Report the type count differences to the log.
-	 * 
-	 * @param counts
+	 * Report the differences for minID/maxId to the log
+	 * @param typeCounts
 	 */
-	public void reportCountDifferences(ResultPair<List<MigrationTypeCount>> typeCounts);
+	public void reportMetaDifferences(ResultPair<List<MigrationTypeCount>> typeCounts);
+
 
 	/**
 	 * Report a count down before the migration process starts.
