@@ -3,8 +3,8 @@ package org.sagebionetworks.migration.async;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -19,8 +19,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.sagebionetworks.migration.config.Configuration;
 import org.sagebionetworks.migration.utils.TypeToMigrateMetadata;
-import org.sagebionetworks.migration.utils.TypeToMigrateMetadata.TypeToMigrateMetadataBuilder;
-import org.sagebionetworks.repo.model.daemon.BackupAliasType;
 import org.sagebionetworks.repo.model.migration.MigrationType;
 import org.sagebionetworks.repo.model.migration.MigrationTypeCount;
 
@@ -37,7 +35,6 @@ public class MissingFromDestinationIteratorTest {
 	MigrationType type;
 	int batchSize;
 	String backupFileKey;
-	BackupAliasType aliasType;
 	RestoreDestinationJob one;
 	RestoreDestinationJob two;
 	private boolean isSourceReadOnly;
@@ -46,9 +43,6 @@ public class MissingFromDestinationIteratorTest {
 	public void before() {
 		type = MigrationType.NODE;
 		batchSize = 3;
-		when(mockConfig.getMaximumBackupBatchSize()).thenReturn(batchSize);
-		aliasType = BackupAliasType.TABLE_NAME;
-		when(mockConfig.getBackupAliasType()).thenReturn(aliasType);
 
 		one = new RestoreDestinationJob(type, "one");
 		List<DestinationJob> batchOne = Lists.newArrayList(

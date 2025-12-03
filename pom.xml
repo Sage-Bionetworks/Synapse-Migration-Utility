@@ -36,7 +36,7 @@
 		<synapseclient.version>560.0</synapseclient.version>
 		<junit.version>4.13.1</junit.version>
 		<awssdk.version>1.12.15</awssdk.version>
-		<mockito.version>1.10.19</mockito.version>
+		<mockito.version>2.27.0</mockito.version>
 		<xstream.version>1.4.17</xstream.version>
 	</properties>
 
@@ -69,7 +69,13 @@
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
 			<version>${mockito.version}</version>
 			<scope>test</scope>
 		</dependency>

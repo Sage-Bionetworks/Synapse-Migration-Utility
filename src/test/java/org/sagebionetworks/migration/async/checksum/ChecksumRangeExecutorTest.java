@@ -232,7 +232,6 @@ public class ChecksumRangeExecutorTest {
 
 	@Test
 	public void testFindAllMismatchedRangesMinIdNull() {
-		when(mockAsynchronousJobExecutor.executeSourceAndDestinationJob(any(), any())).thenThrow(new IllegalArgumentException());
 		TypeToMigrateMetadata metadata = TypeToMigrateMetadata.builder(false)
 				.setSource(new MigrationTypeCount().setMinid(null).setMaxid(null).setType(type))
 				.setDest(new MigrationTypeCount().setType(type)).build();
