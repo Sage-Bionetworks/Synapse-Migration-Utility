@@ -41,7 +41,7 @@
 		<synapseclient.version>610.0</synapseclient.version>
 		<junit.version>5.14.4</junit.version>
 		<aws.sdk.version>2.29.34</aws.sdk.version>
-		<guava.version>33.6.0-jre</guava.version>
+		<guava.version>33.7.1-jre</guava.version>
 		<guice.version>7.0.0</guice.version>
 		<mockito.version>5.23.0</mockito.version>
 		<xstream.version>1.4.21</xstream.version>
